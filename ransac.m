@@ -1,26 +1,30 @@
 close all;
 clear all;
 
+%Load the original and the modified image
 img1 = imreadgrey('lena.jpg');
 img2 = imreadgrey('lena_rot.jpg');
 
+%Detect surf features on both images
 points1 = detectSURFFeatures(img1);
 [features1, validPoints1] = extractFeatures(img1, points1);
 
 points2 = detectSURFFeatures(img2);
 [features2, validPoints2] = extractFeatures(img2, points2);
 
+%Show the strongest 10 surf points in each image
 % figure; imshow(img0); hold on;
 % plot(validPoints0.selectStrongest(10),'showOrientation',true);
 % 
 % figure; imshow(img1); hold on;
 % plot(validPoints1.selectStrongest(10),'showOrientation',true);
 
-%Take the first x features from the points
+%Take the numPoints1 strongest points from the first img
 numPoints1 = 4;
 subPoints1 = validPoints1.selectStrongest(numPoints1);
 for i=1:numPoints1
     for j=1:size(features1, 1)
+        %Location has the actual pixel indices
         if subPoints1(i).Location == validPoints1(j).Location
             subFeatures1(i,:) = features1(i,:);
         end
@@ -28,52 +32,34 @@ for i=1:numPoints1
 end
 
 numPoints2 = validPoints2.Count;
-% subPoints0 = validPoints0([1:numPoints]);
-% subFeatures0 = features0([1:numPoints], :);
-% 
-% %For each point in our subset of points calculate the distance in feature
-% %space to all the points in the second set
-% for i=1:numPoints
-%     for j=1:size(features1, 1)
-%         distances(i,j) = norm(subFeatures0(i, :) - features1(j, :));
-%     end
-% end
-% 
-% %Store insubPoints1 the points whose distance is closestto the ones in
-% %the patch we are looking for
-% subPoints1 = SURFPoints;
-% for i=1:numPoints
-%     [~, index] = min(distances(i, :));
-%     subFeatures1(i) = features1(index);
-%     subPoints1(i) = validPoints1(index);
-% end
 
-
-% figure; imshow(img0); hold on;
-% plot(subPoints0);
-% 
 % figure; imshow(img1); hold on;
 % plot(subPoints1);
-
-% imgCenter = [size(img0, 1) / 2, size(img0, 2) / 2]; 
+ 
 %The input to the algorithm is:
 n = 4; %- the number of random points to pick every iteration in order to create the transform.
 k = 100; % - the number of iterations to run
-t = 100; % - the threshold for the square distance for a point to be considered as a match
-d = 0; %- the number of points that need to be matched for the transform to be valid
-base_points = subPoints1.Location;
-base_points(:,3) = 1;
-image2_points = validPoints2.Location; %- two arrays of the same size with points.
+t = 50; % - the threshold for the square distance for a point to be considered as a match
+d = 3; %- the number of points that need to be matched for the transform to be valid
+
+
+base_points = subPoints1.Location; %Points we want to match
 %add homogeneus coordinate
+base_points(:,3) = 1;
+
+image2_points = validPoints2.Location;%Points in the second img
 image2_points(:,3) = 1;
-input_points = ones(n, 3);
-%Assumes that image1_points[x] is best mapped to image2_points[x] accodring to the computed features.
+
+input_points = ones(n, 3); %Points to be matched against
 
 best_model = eye(3);
 best_error = Inf;
 best_angle = 0;
 for i = 0:k
-    %Generate random array of size n with unrepeated indices up to numPoints
+    %Take n random points from the second img
+    
+    %Generate random array of size n with unrepeated indices up to
+    %numPoints2
     rand_indices = randperm(numPoints2, n);
 
     for j = 1:n
@@ -82,14 +68,22 @@ for i = 0:k
     end
     
     %Reorder input_points so that the are matched with base_points
-    %according to distance, so closer points will go together
+    %according to distance, so we will match first base_points with the
+    %first input_points, second with second, etc
     input_points = reorderPoints(base_points, subFeatures1, input_points, input_features);
-    %Compose a homography matrix using the data
-    homographyMatrix = makeHomographyMatrix(base_points, input_points);
-    %Solve the equations
-    [~, ~, V] = svd(homographyMatrix);
-    maybe_model = vec2mat(V(:, end), 3);
     
+    %Create a homography matrix using the data
+    homographyMatrix = makeHomographyMatrix(base_points, input_points);
+    
+    %Solve the equations unsing SVD
+    [~, ~, V] = svd(homographyMatrix);
+    
+    %The affine matrix transformation is the last column of the V matrix
+    maybe_model = vec2mat(V(:, end), 3);
+    %The transformation does not correctly transform from img1 to img2
+    
+    %This should check how good the random points match the original points
+    %so all this code is actually wrong
     consensus_set = 0;
     total_error = 0;
     for j = 1:numPoints1
@@ -112,6 +106,7 @@ for i = 0:k
     end
 end
 
+%Create a new image applying the transformation to the first img
 for i=1:size(img1,1)
     for j=1:size(img1,2)
         newIndex = best_model * [i,j,1]';
