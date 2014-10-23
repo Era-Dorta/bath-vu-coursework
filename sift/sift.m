@@ -2,7 +2,7 @@ close all;
 clear all;
 
 imgPath = 'lena.jpg';
-[sift_indices, sift_descriptors] = mysift(imgPath, true);
+[sift_indices, sift_descriptors] = mysift(imgPath, [0:0.5:4], true);
 
 %% Plotting the result
 imshow(imread(imgPath));

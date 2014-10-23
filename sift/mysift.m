@@ -1,6 +1,6 @@
-function [ sift_indices, sift_descriptors ] = mysift( imgPath, reject_weak_points )
+function [ sift_indices, sift_descriptors ] = mysift( imgPath, gaussians_range, reject_weak_points )
     
-    if nargin < 2
+    if nargin < 3
         reject_weak_points = false;
     end
     
@@ -21,7 +21,8 @@ function [ sift_indices, sift_descriptors ] = mysift( imgPath, reject_weak_point
     [x , y] = meshgrid(linspace(-n/2, n/2, n), linspace(-m/2, m/2, m));
 
     %% CALCULATING THE GAUSSIANS
-    sigma_vec = 2.^[0:0.5:4];
+    %sigma_vec = 2.^[0:0.5:4];
+    sigma_vec = 2.^gaussians_range;
     scale_size = length(sigma_vec);
 
     for i = 1:scale_size
