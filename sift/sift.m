@@ -5,6 +5,7 @@ imgPath = 'lena.jpg';
 [sift_indices, sift_descriptors] = mysift(imgPath, [0:0.5:4], true);
 
 %% Plotting the result
+figure;
 imshow(imread(imgPath));
 hold on;
 for i = 1:size(sift_indices, 2)
