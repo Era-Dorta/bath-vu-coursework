@@ -1,11 +1,11 @@
 close all;
 clear all;
 
-%Load the original and the modified image
+%% Load the original and the modified image
 img1 = imreadgrey('lena.jpg');
 img2 = imreadgrey('lena_rot.jpg');
 
-%Detect surf features on both images
+%% Detect surf features on both images
 points1 = detectSURFFeatures(img1);
 [features1, validPoints1] = extractFeatures(img1, points1);
 
@@ -13,11 +13,11 @@ points2 = detectSURFFeatures(img2);
 [features2, validPoints2] = extractFeatures(img2, points2);
 
 %Show the strongest 10 surf points in each image
-% figure; imshow(img0); hold on;
-% plot(validPoints0.selectStrongest(10),'showOrientation',true);
-% 
 % figure; imshow(img1); hold on;
 % plot(validPoints1.selectStrongest(10),'showOrientation',true);
+% 
+% figure; imshow(img2); hold on;
+% plot(validPoints2.selectStrongest(10),'showOrientation',true);
 
 %Take the numPoints1 strongest points from the first img
 numPoints1 = 4;
@@ -36,7 +36,7 @@ numPoints2 = validPoints2.Count;
 % figure; imshow(img1); hold on;
 % plot(subPoints1);
  
-%The input to the algorithm is:
+%% The input to the algorithm is:
 n = 4; %- the number of random points to pick every iteration in order to create the transform.
 k = 100; % - the number of iterations to run
 t = 50; % - the threshold for the square distance for a point to be considered as a match
@@ -55,6 +55,8 @@ input_points = ones(n, 3); %Points to be matched against
 best_model = eye(3);
 best_error = Inf;
 best_angle = 0;
+
+%% Main loop
 for i = 0:k
     %Take n random points from the second img
     
@@ -106,7 +108,7 @@ for i = 0:k
     end
 end
 
-%Create a new image applying the transformation to the first img
+%% Create a new image applying the transformation to the first img
 for i=1:size(img1,1)
     for j=1:size(img1,2)
         newIndex = best_model * [i,j,1]';
@@ -117,6 +119,7 @@ for i=1:size(img1,1)
     end
 end
 
+%% Show results
 figure; imshow(img1); hold on;
 figure; imshow(img2); hold on;
 figure; imshow(resImg); hold on;
