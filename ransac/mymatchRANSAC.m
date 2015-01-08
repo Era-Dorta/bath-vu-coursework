@@ -1,4 +1,4 @@
-function [ best_model ] = mymatchRANSAC( img1, img2, numMatch, n, k, t, d )
+function [ best_model ] = mymatchRANSAC( img1, img2, numMatch, n, k, t, d, verbose )
 
 %% Detect surf features on both images
 rng('default'); %Set random seed to default
@@ -79,8 +79,10 @@ for i = 0:k
     end
 
     if consensus_set >= d && total_error < best_error
-        fprintf('Improving the model, points match %d, prev error %2.2f, current error %2.2f\n', ...
-            consensus_set, best_error, total_error);
+        if verbose
+            fprintf('Improving the model, points match %d, prev error %2.2f, current error %2.2f\n', ...
+                consensus_set, best_error, total_error);
+        end
         best_model = maybe_model;
         best_error = total_error;
     end
@@ -110,7 +112,10 @@ best_model(3,1:2) = 0;
 best_model = best_model';
 
 ransac_time = toc;
-fprintf('Ransac elapsed time %2.2f\n', ransac_time);
+
+if verbose
+    fprintf('Ransac elapsed time %2.2f\n', ransac_time);
+end
 
 end
 

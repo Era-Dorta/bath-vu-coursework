@@ -10,8 +10,9 @@ n = 4; %- the number of random points to pick every iteration in order to create
 k = 100000; % - the number of iterations to run
 t = 10; % - the threshold for the square distance for a point to be considered as a match
 d = numMatch; %- the number of points that need to be matched for the transform to be valid
+verbose = true; % true to display extra information
 
-aff_tr = mymatchRANSAC(img1, img2, numMatch, n, k, t, d);
+aff_tr = mymatchRANSAC(img1, img2, numMatch, n, k, t, d, verbose);
 
 tform = affine2d(aff_tr);
 resImg = imwarp(img1, tform);
