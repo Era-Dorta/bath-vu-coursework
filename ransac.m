@@ -81,19 +81,21 @@ for i = 0:k
     [~, ~, V] = svd(homographyMatrix);
     
     %The affine matrix transformation is the last column of the V matrix
-    maybe_model = vec2mat(V(:, end), 3);
-    %The transformation does not correctly transform from img1 to img2
+    %transposed
+    maybe_model = reshape(V(:, end), [3, 3]);
+    maybe_model = maybe_model';
     
     %This should check how good the random points match the original points
     %so all this code is actually wrong
     consensus_set = 0;
     total_error = 0;
     for j = 1:numPoints1
-        image2p = image2_points(j, :);
         image1p = base_points(j, :);
+        image2p = input_points(j, :);
         %Transform the point using the model and check how far it is from
         %the point in img2
         image1PointTrans = maybe_model * image1p';
+        %Make sure the last coordinate is homogeneus
         image1PointTrans = image1PointTrans / image1PointTrans(3);
         distError = norm(image2p - image1PointTrans');
         if distError < t
