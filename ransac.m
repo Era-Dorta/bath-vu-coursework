@@ -22,34 +22,15 @@ points2 = detectSURFFeatures(img2);
 %Take the numPoints1 strongest points from the first and the second img
 numPoints1 = 10;
 subPoints1 = validPoints1.selectStrongest(numPoints1);
-for i=1:numPoints1
-    for j=1:size(features1, 1)
-        %Location has the actual pixel indices
-        if subPoints1(i).Location == validPoints1(j).Location
-            subFeatures1(i,:) = features1(i,:);
-        end
-    end
-end
 
 numPoints2 = 10;
 subPoints2 = validPoints2.selectStrongest(numPoints2);
-for i=1:numPoints2
-    for j=1:size(features2, 1)
-        %Location has the actual pixel indices
-        if subPoints2(i).Location == validPoints2(j).Location
-            subFeatures2(i,:) = features2(i,:);
-        end
-    end
-end
 
-% figure; imshow(img1); hold on;
-% plot(subPoints1);
- 
 %% The input to the algorithm is:
 n = 4; %- the number of random points to pick every iteration in order to create the transform.
 k = 100000; % - the number of iterations to run
 t = 10; % - the threshold for the square distance for a point to be considered as a match
-d = 8; %- the number of points that need to be matched for the transform to be valid
+d = numPoints1; %- the number of points that need to be matched for the transform to be valid
 
 image1_points = subPoints1.Location;%Points in the first img
 image1_points(:,3) = 1;
@@ -77,16 +58,6 @@ for i = 0:k
         base_points(j, :) = image1_points(rand_indices1(j), :);
         input_points(j, :) = image2_points(rand_indices2(j), :);
     end
-    
-%     for j = 1:n
-%         base_points(j, :) = image1_points(j, :);
-%         input_points(j, :) = image2_points(j, :);
-%     end
-    
-    %Reorder input_points so that the are matched with base_points
-    %according to distance, so we will match first base_points with the
-    %first input_points, second with second, etc
-    %input_points = reorderPoints(base_points, base_features, input_points, input_features);
     
     %Create a homography matrix using the data
     homographyMatrix = makeHomographyMatrix(base_points, input_points);
@@ -119,7 +90,8 @@ for i = 0:k
     end
 
     if consensus_set > d && total_error < best_error
-        disp('Improving the model');
+        fprintf('Improving the model, points match %d, prev error %2.2f, current error %2.2f\n', ...
+            consensus_set, best_error, total_error);
         best_model = maybe_model;
         best_error = total_error;
     end
