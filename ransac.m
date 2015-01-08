@@ -19,8 +19,8 @@ points2 = detectSURFFeatures(img2);
 % figure; imshow(img2); hold on;
 % plot(validPoints2.selectStrongest(10),'showOrientation',true);
 
-%Take the numPoints1 strongest points from the first img
-numPoints1 = 4;
+%Take the numPoints1 strongest points from the first and the second img
+numPoints1 = 10;
 subPoints1 = validPoints1.selectStrongest(numPoints1);
 for i=1:numPoints1
     for j=1:size(features1, 1)
@@ -31,25 +31,33 @@ for i=1:numPoints1
     end
 end
 
-numPoints2 = validPoints2.Count;
+numPoints2 = 10;
+subPoints2 = validPoints2.selectStrongest(numPoints2);
+for i=1:numPoints2
+    for j=1:size(features2, 1)
+        %Location has the actual pixel indices
+        if subPoints2(i).Location == validPoints2(j).Location
+            subFeatures2(i,:) = features2(i,:);
+        end
+    end
+end
 
 % figure; imshow(img1); hold on;
 % plot(subPoints1);
  
 %% The input to the algorithm is:
 n = 4; %- the number of random points to pick every iteration in order to create the transform.
-k = 100; % - the number of iterations to run
-t = 50; % - the threshold for the square distance for a point to be considered as a match
-d = 3; %- the number of points that need to be matched for the transform to be valid
+k = 100000; % - the number of iterations to run
+t = 10; % - the threshold for the square distance for a point to be considered as a match
+d = 8; %- the number of points that need to be matched for the transform to be valid
 
+image1_points = subPoints1.Location;%Points in the first img
+image1_points(:,3) = 1;
 
-base_points = subPoints1.Location; %Points we want to match
-%add homogeneus coordinate
-base_points(:,3) = 1;
-
-image2_points = validPoints2.Location;%Points in the second img
+image2_points = subPoints2.Location;%Points in the second img
 image2_points(:,3) = 1;
 
+base_points = ones(n, 3); %Points we want to match
 input_points = ones(n, 3); %Points to be matched against
 
 best_model = eye(3);
@@ -58,21 +66,27 @@ best_angle = 0;
 
 %% Main loop
 for i = 0:k
-    %Take n random points from the second img
+    %Take n random points from the first and the second img
     
     %Generate random array of size n with unrepeated indices up to
     %numPoints2
-    rand_indices = randperm(numPoints2, n);
+    rand_indices1 = randperm(numPoints1, n);
+    rand_indices2 = randperm(numPoints2, n);
 
     for j = 1:n
-        input_points(j, :) = image2_points(rand_indices(j), :);
-        input_features(j, :) = features2(j,:);
+        base_points(j, :) = image1_points(rand_indices1(j), :);
+        input_points(j, :) = image2_points(rand_indices2(j), :);
     end
+    
+%     for j = 1:n
+%         base_points(j, :) = image1_points(j, :);
+%         input_points(j, :) = image2_points(j, :);
+%     end
     
     %Reorder input_points so that the are matched with base_points
     %according to distance, so we will match first base_points with the
     %first input_points, second with second, etc
-    input_points = reorderPoints(base_points, subFeatures1, input_points, input_features);
+    %input_points = reorderPoints(base_points, base_features, input_points, input_features);
     
     %Create a homography matrix using the data
     homographyMatrix = makeHomographyMatrix(base_points, input_points);
@@ -85,13 +99,13 @@ for i = 0:k
     maybe_model = reshape(V(:, end), [3, 3]);
     maybe_model = maybe_model';
     
-    %This should check how good the random points match the original points
+    %This checks how good the random points match the original points
     %so all this code is actually wrong
     consensus_set = 0;
     total_error = 0;
     for j = 1:numPoints1
-        image1p = base_points(j, :);
-        image2p = input_points(j, :);
+        image1p = image1_points(j, :);
+        image2p = image2_points(j, :);
         %Transform the point using the model and check how far it is from
         %the point in img2
         image1PointTrans = maybe_model * image1p';
@@ -105,21 +119,37 @@ for i = 0:k
     end
 
     if consensus_set > d && total_error < best_error
+        disp('Improving the model');
         best_model = maybe_model;
         best_error = total_error;
     end
 end
 
 %% Create a new image applying the transformation to the first img
-for i=1:size(img1,1)
-    for j=1:size(img1,2)
-        newIndex = best_model * [i,j,1]';
-        newIndex = round(newIndex / newIndex(3));
-        if(newIndex(1) >= 1 && newIndex(1) < 500 && newIndex(2) >= 1 && newIndex(2) < 500)
-            resImg(newIndex(1), newIndex(2)) = img1(i,j);
-        end
-    end
-end
+% for i=1:size(img1,1)
+%     for j=1:size(img1,2)
+%         newIndex = best_model * [i,j,1]';
+%         newIndex = round(newIndex / newIndex(3));
+%         if(newIndex(1) >= 1 && newIndex(1) < 500 && newIndex(2) >= 1 && newIndex(2) < 500)
+%             resImg(newIndex(1), newIndex(2)) = img1(i,j);
+%         end
+%     end
+% end
+
+%Convert the model into an affine transformation matrix
+
+%3,3 element has to be 1
+aff_tr = best_model / best_model(3,3);
+
+%Make sure bottom two values are 0, this step introduces rounding errors
+aff_tr(3,1:2) = 0;
+
+%Matlab requires the last column, not the last row to be the one with the
+%zeros, so transpose the matrix
+aff_tr = aff_tr';
+
+tform = affine2d(aff_tr);
+resImg = imwarp(img1, tform);
 
 %% Show results
 figure; imshow(img1); hold on;
