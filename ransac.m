@@ -6,6 +6,9 @@ img1 = imreadgrey('lena.jpg');
 img2 = imreadgrey('lena_rot.jpg');
 
 %% Detect surf features on both images
+rng('default'); %Set random seed to default
+tic;
+
 points1 = detectSURFFeatures(img1);
 [features1, validPoints1] = extractFeatures(img1, points1);
 
@@ -89,7 +92,7 @@ for i = 0:k
         end
     end
 
-    if consensus_set > d && total_error < best_error
+    if consensus_set >= d && total_error < best_error
         fprintf('Improving the model, points match %d, prev error %2.2f, current error %2.2f\n', ...
             consensus_set, best_error, total_error);
         best_model = maybe_model;
@@ -122,6 +125,9 @@ aff_tr = aff_tr';
 
 tform = affine2d(aff_tr);
 resImg = imwarp(img1, tform);
+
+ransac_time = toc;
+fprintf('Ransac elapsed time %2.2f\n', ransac_time);
 
 %% Show results
 figure; imshow(img1); hold on;
