@@ -1,4 +1,4 @@
-function [ best_model ] = mymatchRANSAC( img1, img2, n, k, t, d, verbose )
+function [ best_model ] = mymatchRANSAC( img1, img2, n, k, t, verbose )
 
 %% Detect surf features on both images
 rng('default'); % Set random seed to default
@@ -18,6 +18,8 @@ indexPairs = matchFeatures(features1,features2);
 numMatch = size(indexPairs, 1);
 matchedPoints1 = validPoints1(indexPairs(:, 1));
 matchedPoints2 = validPoints2(indexPairs(:, 2));
+
+%figure; showMatchedFeatures(img1, img2, matchedPoints1, matchedPoints2);
 
 %% The input to the algorithm is:
 image1_points = matchedPoints1.Location;% Pixel locations in the first img
@@ -48,10 +50,10 @@ for i = 0:k
     end
     
     % Create a homography matrix using the data
-    homographyMatrix = makeHomographyMatrix(base_points, input_points);
+    H = makeHmatrix(base_points, input_points);
     
     % Solve the equations unsing SVD
-    [~, ~, V] = svd(homographyMatrix);
+    [~, ~, V] = svd(H);
     
     % The affine matrix transformation is the last column of the V matrix
     % transposed
@@ -78,16 +80,16 @@ for i = 0:k
     if consensus_set >= prev_consensus
         if consensus_set > prev_consensus
             if verbose
-                fprintf('Improving the model, points match %d, prev error %2.2f, current error %2.2f\n', ...
-                    consensus_set, best_error, total_error);
+                fprintf('Improving the model, points match %d, prev mean error %2.2f, current mean error %2.2f\n', ...
+                    consensus_set, best_error/prev_consensus, total_error/consensus_set);
             end
             best_model = maybe_model;
             best_error = total_error;
             prev_consensus = consensus_set;
         else if total_error < best_error
                 if verbose
-                    fprintf('Improving the model, points match %d, prev error %2.2f, current error %2.2f\n', ...
-                        consensus_set, best_error, total_error);
+                    fprintf('Improving the model, points match %d, prev mean error %2.2f, current mean error %2.2f\n', ...
+                        consensus_set, best_error/prev_consensus, total_error/consensus_set);
                 end
                 best_model = maybe_model;
                 best_error = total_error;
