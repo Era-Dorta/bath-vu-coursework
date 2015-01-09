@@ -1,4 +1,5 @@
-function [ sift_indices, sift_descriptors ] = mysift( imgPath, gaussians_range, reject_weak_points )
+function [ sift_indices, sift_descriptors, xind, yind, zind, sigma_vec, theta ] ...
+    = mysift( imgPath, gaussians_range, reject_weak_points )
     
     if nargin < 3
         reject_weak_points = false;
