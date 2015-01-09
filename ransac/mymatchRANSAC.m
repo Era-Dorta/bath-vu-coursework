@@ -55,21 +55,18 @@ for i = 0:k
     
     % The affine matrix transformation is the last column of the V matrix
     % transposed
-    maybe_model = reshape(V(:, end), [3, 3]);
-    maybe_model = maybe_model';
+    maybe_model = reshape(V(:, end), [3, 3])';
     
     % Check how good the transformation is with all the points
     consensus_set = 0;
     total_error = 0;
     for j = 1:numMatch
-        image1p = image1_points(j, :);
-        image2p = image2_points(j, :);
-        % Transform the point using the model and check how far it is from
-        % the point in image2
-        image1PointTrans = maybe_model * image1p';
+        % Transform the point in image1 using the model, and check how far
+        % they end up from their matches in image2
+        image1PointTrans = maybe_model * image1_points(j, :)';
         %Make sure the last coordinate is homogeneus
         image1PointTrans = image1PointTrans / image1PointTrans(3);
-        distError = norm(image2p - image1PointTrans');
+        distError = norm(image2_points(j, :) - image1PointTrans');
         if distError < t
             consensus_set = consensus_set + 1;
             total_error = total_error + distError;
