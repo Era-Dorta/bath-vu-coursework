@@ -1,7 +1,7 @@
 function [ best_model ] = mymatchRANSAC( img1, img2, n, k, t, d, verbose )
 
 %% Detect surf features on both images
-rng('default'); %Set random seed to default
+rng('default'); % Set random seed to default
 tic;
 
 points1 = detectSURFFeatures(img1);
@@ -10,31 +10,36 @@ points1 = detectSURFFeatures(img1);
 points2 = detectSURFFeatures(img2);
 [features2, validPoints2] = extractFeatures(img2, points2);
 
+% Match the features, if I were to do this myself, I would calculate the
+% distance in feature space from all points in image1 to all points in
+% image2. Then the point in image2 assigned to a point in image1 would the
+% one with the shortest distance.
 indexPairs = matchFeatures(features1,features2);
 numMatch = size(indexPairs, 1);
 matchedPoints1 = validPoints1(indexPairs(:, 1));
 matchedPoints2 = validPoints2(indexPairs(:, 2));
 
 %% The input to the algorithm is:
-image1_points = matchedPoints1.Location;%Points in the first img
-image1_points(:,3) = 1;
+image1_points = matchedPoints1.Location;% Pixel locations in the first img
+image1_points(:,3) = 1; % Add homogeneous coordinate
 
-image2_points = matchedPoints2.Location;%Points in the second img
+image2_points = matchedPoints2.Location;% Pixel locations in the second img
 image2_points(:,3) = 1;
 
-base_points = ones(n, 3); %Points we want to match
-input_points = ones(n, 3); %Points to be matched against
+base_points = ones(n, 3); % Points we want to match
+input_points = ones(n, 3); % Points to be matched against
 
 best_model = eye(3);
 best_error = Inf;
-prev_consensus = 0;
+prev_consensus = 0; % Number of inliers in the previous best model
 
 %% Main loop
 for i = 0:k
-    %Take n random points from the first and the second img
+    % Take n random points from the first img and their matches in the
+    % second image
     
-    %Generate random array of size n with unrepeated indices up to
-    %numMatch
+    % Generate random array of size n with unrepeated indices up to
+    % numMatch
     rand_indices = randperm(numMatch, n);
     
     for j = 1:n
@@ -42,25 +47,25 @@ for i = 0:k
         input_points(j, :) = image2_points(rand_indices(j), :);
     end
     
-    %Create a homography matrix using the data
+    % Create a homography matrix using the data
     homographyMatrix = makeHomographyMatrix(base_points, input_points);
     
-    %Solve the equations unsing SVD
+    % Solve the equations unsing SVD
     [~, ~, V] = svd(homographyMatrix);
     
-    %The affine matrix transformation is the last column of the V matrix
-    %transposed
+    % The affine matrix transformation is the last column of the V matrix
+    % transposed
     maybe_model = reshape(V(:, end), [3, 3]);
     maybe_model = maybe_model';
     
-    %This checks how good the transformation is with all the points
+    % Check how good the transformation is with all the points
     consensus_set = 0;
     total_error = 0;
     for j = 1:numMatch
         image1p = image1_points(j, :);
         image2p = image2_points(j, :);
-        %Transform the point using the model and check how far it is from
-        %the point in img2
+        % Transform the point using the model and check how far it is from
+        % the point in image2
         image1PointTrans = maybe_model * image1p';
         %Make sure the last coordinate is homogeneus
         image1PointTrans = image1PointTrans / image1PointTrans(3);
@@ -72,7 +77,7 @@ for i = 0:k
     end
     
     % Save this transformation if it includes more points in the consensus
-    %or the same number of points but with less error
+    % or the same number of points but with less error
     if consensus_set >= prev_consensus
         if consensus_set > prev_consensus
             if verbose
@@ -97,14 +102,16 @@ end
 
 %% Convert the model into an affine transformation matrix
 
-%3,3 element has to be 1
+% Force 3,3 element to be 1
 best_model = best_model / best_model(3,3);
 
-%Make sure bottom two values are 0, this step introduces rounding errors
+% Force bottom two values to be 0, they should already be close to zero but
+% they are not, due to numerical errors in the homography calculation and 
+% in the previous normalization step
 best_model(3,1:2) = 0;
 
-%Matlab requires the last column, not the last row to be the one with the
-%zeros, so transpose the matrix
+% Matlab affine transformation matrices are transposed, [0, 0, 1] in the   
+% last column instead of in the last row
 best_model = best_model';
 
 ransac_time = toc;
