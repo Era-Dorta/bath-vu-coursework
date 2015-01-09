@@ -1,31 +1,25 @@
-function [ best_model ] = mymatchRANSAC( img1, img2, numMatch, n, k, t, d, verbose )
+function [ best_model ] = mymatchRANSAC( img1, img2, n, k, t, d, verbose )
 
 %% Detect surf features on both images
 rng('default'); %Set random seed to default
 tic;
 
 points1 = detectSURFFeatures(img1);
-[~, validPoints1] = extractFeatures(img1, points1);
+[features1, validPoints1] = extractFeatures(img1, points1);
 
 points2 = detectSURFFeatures(img2);
-[~, validPoints2] = extractFeatures(img2, points2);
+[features2, validPoints2] = extractFeatures(img2, points2);
 
-%Show the strongest 10 surf points in each image
-% figure; imshow(img1); hold on;
-% plot(validPoints1.selectStrongest(10),'showOrientation',true);
-% 
-% figure; imshow(img2); hold on;
-% plot(validPoints2.selectStrongest(10),'showOrientation',true);
-
-%Take the matchPoints strongest points from the first and the second img
-subPoints1 = validPoints1.selectStrongest(numMatch);
-subPoints2 = validPoints2.selectStrongest(numMatch);
+indexPairs = matchFeatures(features1,features2);
+numMatch = size(indexPairs, 1);
+matchedPoints1 = validPoints1(indexPairs(:, 1));
+matchedPoints2 = validPoints2(indexPairs(:, 2));
 
 %% The input to the algorithm is:
-image1_points = subPoints1.Location;%Points in the first img
+image1_points = matchedPoints1.Location;%Points in the first img
 image1_points(:,3) = 1;
 
-image2_points = subPoints2.Location;%Points in the second img
+image2_points = matchedPoints2.Location;%Points in the second img
 image2_points(:,3) = 1;
 
 base_points = ones(n, 3); %Points we want to match
@@ -33,19 +27,19 @@ input_points = ones(n, 3); %Points to be matched against
 
 best_model = eye(3);
 best_error = Inf;
+prev_consensus = 0;
 
 %% Main loop
 for i = 0:k
     %Take n random points from the first and the second img
     
     %Generate random array of size n with unrepeated indices up to
-    %numPoints2
-    rand_indices1 = randperm(numMatch, n);
-    rand_indices2 = randperm(numMatch, n);
-
+    %numMatch
+    rand_indices = randperm(numMatch, n);
+    
     for j = 1:n
-        base_points(j, :) = image1_points(rand_indices1(j), :);
-        input_points(j, :) = image2_points(rand_indices2(j), :);
+        base_points(j, :) = image1_points(rand_indices(j), :);
+        input_points(j, :) = image2_points(rand_indices(j), :);
     end
     
     %Create a homography matrix using the data
@@ -59,8 +53,7 @@ for i = 0:k
     maybe_model = reshape(V(:, end), [3, 3]);
     maybe_model = maybe_model';
     
-    %This checks how good the random points match the original points
-    %so all this code is actually wrong
+    %This checks how good the transformation is with all the points
     consensus_set = 0;
     total_error = 0;
     for j = 1:numMatch
@@ -77,29 +70,32 @@ for i = 0:k
             total_error = total_error + distError;
         end
     end
-
-    if consensus_set >= d && total_error < best_error
-        if verbose
-            fprintf('Improving the model, points match %d, prev error %2.2f, current error %2.2f\n', ...
-                consensus_set, best_error, total_error);
+    
+    % Save this transformation if it includes more points in the consensus
+    %or the same number of points but with less error
+    if consensus_set >= prev_consensus
+        if consensus_set > prev_consensus
+            if verbose
+                fprintf('Improving the model, points match %d, prev error %2.2f, current error %2.2f\n', ...
+                    consensus_set, best_error, total_error);
+            end
+            best_model = maybe_model;
+            best_error = total_error;
+            prev_consensus = consensus_set;
+        else if total_error < best_error
+                if verbose
+                    fprintf('Improving the model, points match %d, prev error %2.2f, current error %2.2f\n', ...
+                        consensus_set, best_error, total_error);
+                end
+                best_model = maybe_model;
+                best_error = total_error;
+                prev_consensus = consensus_set;
+            end
         end
-        best_model = maybe_model;
-        best_error = total_error;
     end
 end
 
-%% Create a new image applying the transformation to the first img
-% for i=1:size(img1,1)
-%     for j=1:size(img1,2)
-%         newIndex = best_model * [i,j,1]';
-%         newIndex = round(newIndex / newIndex(3));
-%         if(newIndex(1) >= 1 && newIndex(1) < 500 && newIndex(2) >= 1 && newIndex(2) < 500)
-%             resImg(newIndex(1), newIndex(2)) = img1(i,j);
-%         end
-%     end
-% end
-
-%Convert the model into an affine transformation matrix
+%% Convert the model into an affine transformation matrix
 
 %3,3 element has to be 1
 best_model = best_model / best_model(3,3);
