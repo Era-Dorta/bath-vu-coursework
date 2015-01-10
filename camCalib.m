@@ -39,7 +39,8 @@ P = P / P(3,4);
 for i=1:6
     testp = P*base_p(i,:)';
     testp = testp / testp(3);
-    testp = round(testp(1:2));
+    testp = testp(1:2);
+    plot(input_p(i,1), input_p(i,2), 'ob');
     plot(testp(1), testp(2), 'xr');
 end
 
