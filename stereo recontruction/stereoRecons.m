@@ -20,19 +20,21 @@ if simpleRecons
         391.5, 232.5; 451.5, 221.5; 509, 211; 387.5, 289.5; 445.5, 277.5; ...
         500.5, 265.5; 384.5, 341.5; 440, 329; 493, 316]';
 else
-    img1 = imreadgrey('images/cube_left.png');
-    img2 = imreadgrey('images/cube_right.png');
+    img1 = imreadgrey('images/car_left.png');
+    img2 = imreadgrey('images/car_right.png');
 
-    points1 = detectSURFFeatures(img1);
+    points1 = detectSURFFeatures(img1, 'MetricThreshold', 10);
     [features1, validPoints1] = extractFeatures(img1, points1);
     
-    points2 = detectSURFFeatures(img2);
+    points2 = detectSURFFeatures(img2, 'MetricThreshold', 10);
     [features2, validPoints2] = extractFeatures(img2, points2);
     
     indexPairs = matchFeatures(features1,features2);
     numMatch = size(indexPairs, 1);
     x_left = validPoints1.Location(indexPairs(:, 1),:)';
     x_right = validPoints2.Location(indexPairs(:, 2),:)';
+    
+    figure; showMatchedFeatures(img1, img2, x_left', x_right');
 end
 
 X = Reconstruct(rightP, leftP, x_right, x_left);
