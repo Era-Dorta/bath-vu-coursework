@@ -5,7 +5,7 @@ clear all;
 img = imreadgrey('images/cube_left.png');
 figure; imshow(img); hold on;
 
-useSavedPoints = true;
+useSavedPoints = false;
 
 if useSavedPoints
     input_p =  [325.5883,  402.1961,  1;

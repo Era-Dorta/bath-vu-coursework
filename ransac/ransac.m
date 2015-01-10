@@ -8,8 +8,11 @@ clear all;
 %img1 = imreadgrey('images/zhang_data/CalibIm4.tif');
 %img2 = imreadgrey('images/zhang_data/CalibIm5.tif');
 
-img1 = imreadgrey('images/lena.jpg');
-img2 = imreadgrey('images/lena_scalrot.jpg');
+%img1 = imreadgrey('images/lena.jpg');
+%img2 = imreadgrey('images/lena_scalrot.jpg');
+
+img1 = imreadgrey('images/cube_left.png');
+img2 = imreadgrey('images/cube_right.png');
 
 n = 4; %- the number of random points to pick every iteration in order to create the transform.
 k = 1000; % - the number of iterations to run
