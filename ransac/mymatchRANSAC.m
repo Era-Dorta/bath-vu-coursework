@@ -49,11 +49,11 @@ for i = 0:k
         input_points(j, :) = image2_points(rand_indices(j), :);
     end
     
-    % Create a homography matrix using the data
-    H = makeHmatrix(base_points, input_points);
+    % Create A matrix using the data
+    A = makeAmatrix(base_points, input_points);
     
     % Solve the equations unsing SVD
-    [~, ~, V] = svd(H);
+    [~, ~, V] = svd(A);
     
     % The affine matrix transformation is the last column of the V matrix
     % transposed
