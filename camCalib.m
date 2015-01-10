@@ -46,6 +46,8 @@ end
 
 hold off;
 
+[K, R, t] = decomposeP(P);
+
 % Camera position in 3D word space
 c = [-5, 10, -3];
 
