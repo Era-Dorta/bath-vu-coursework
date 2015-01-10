@@ -15,11 +15,11 @@ base_p = [0, 1, 3, 1; 0, 1, 1, 1; ...
                 3, 4, 3, 1; 3, 4, 1, 1; ...
                 1, 1, 0, 1; 3, 1, 0, 1];
             
-% Construct H matrix from both points
-H = makeH3dMatrix(base_p, input_p);
+% Construct A matrix from both points
+A = makeA3dMatrix(base_p, input_p);
 
-% Use SVD to solve H
-[~, ~, V] = svd(H);
+% Use SVD to solve A
+[~, ~, V] = svd(A);
 
 % P is in the last column of V, also normalize the value in 3,4
 P = reshape(V(:, end), [4, 3])';
