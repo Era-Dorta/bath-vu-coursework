@@ -20,24 +20,44 @@ if simpleRecons
         391.5, 232.5; 451.5, 221.5; 509, 211; 387.5, 289.5; 445.5, 277.5; ...
         500.5, 265.5; 384.5, 341.5; 440, 329; 493, 316]';
 else
-    img1 = imreadgrey('images/car_left.png');
-    img2 = imreadgrey('images/car_right.png');
+    img1 = imreadgrey('images/booksLeft2.png');
+    img2 = imreadgrey('images/booksRight2.png');
 
-    points1 = detectSURFFeatures(img1, 'MetricThreshold', 10);
+    % Detect SURF points and lower the threshold to get extra matches later
+    points1 = detectSURFFeatures(img1, 'MetricThreshold', 100);
     [features1, validPoints1] = extractFeatures(img1, points1);
     
-    points2 = detectSURFFeatures(img2, 'MetricThreshold', 10);
+    points2 = detectSURFFeatures(img2, 'MetricThreshold', 100);
     [features2, validPoints2] = extractFeatures(img2, points2);
     
-    indexPairs = matchFeatures(features1,features2);
+    % Lowering the matching treshold leads to too many matching errors
+    indexPairs = matchFeatures(features1,features2); %'MaxRatio', 0.5
     numMatch = size(indexPairs, 1);
     x_left = validPoints1.Location(indexPairs(:, 1),:)';
     x_right = validPoints2.Location(indexPairs(:, 2),:)';
     
-    figure; showMatchedFeatures(img1, img2, x_left', x_right');
+    fprintf('Reconstructing %d points from the two images\n', numMatch);
+    
+    figure; showMatchedFeatures(img1, img2, x_left', x_right', 'montage');
 end
 
-X = Reconstruct(rightP, leftP, x_right, x_left);
+% Reconstruct the points
+Xraw = Reconstruct(rightP, leftP, x_right, x_left);
 
-figure;
+% Reject points that are out of a distance threshold from the origin 
+maxDist = 10;
+j = 1;
+for i=1:numMatch
+    if norm(Xraw(:,i)) < maxDist
+        X(:,j) = Xraw(:,i);
+        j = j + 1;
+    end
+end
+
+
+% Plot the reconstructed points and the cameras position
+figure; hold on;
 plot3(X(1,:), X(2,:), X(3,:), 'r*');
+plot3(-5, -8, 10, 'bd');
+plot3(5, -8, 10, 'bd');
+hold off;

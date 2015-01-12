@@ -4,22 +4,22 @@ function [ best_model ] = mymatchRANSAC( img1, img2, n, k, t, verbose )
 rng('default'); % Set random seed to default
 tic;
 
-points1 = detectSURFFeatures(img1, 'MetricThreshold', 10);
+points1 = detectSURFFeatures(img1);
 [features1, validPoints1] = extractFeatures(img1, points1);
 
-points2 = detectSURFFeatures(img2, 'MetricThreshold', 10);
+points2 = detectSURFFeatures(img2);
 [features2, validPoints2] = extractFeatures(img2, points2);
 
 % Match the features, if I were to do this myself, I would calculate the
 % distance in feature space from all points in image1 to all points in
 % image2. Then the point in image2 assigned to a point in image1 would the
 % one with the shortest distance.
-indexPairs = matchFeatures(features1,features2, 'MaxRatio', 0.8);
+indexPairs = matchFeatures(features1,features2);
 numMatch = size(indexPairs, 1);
 matchedPoints1 = validPoints1(indexPairs(:, 1));
 matchedPoints2 = validPoints2(indexPairs(:, 2));
 
-figure; showMatchedFeatures(img1, img2, matchedPoints1, matchedPoints2);
+figure; showMatchedFeatures(img1, img2, matchedPoints1, matchedPoints2, 'montage');
 
 %% The input to the algorithm is:
 image1_points = matchedPoints1.Location;% Pixel locations in the first img

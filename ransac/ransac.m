@@ -5,14 +5,11 @@ clear all;
 %img1 = imreadgrey('images/sift_data/box.pgm');
 %img2 = imreadgrey('images/sift_data/scene.pgm');
 
-%img1 = imreadgrey('images/zhang_data/CalibIm4.tif');
-%img2 = imreadgrey('images/zhang_data/CalibIm5.tif');
-
 %img1 = imreadgrey('images/lena.jpg');
 %img2 = imreadgrey('images/lena_scalrot.jpg');
 
-img1 = imreadgrey('images/guitarLeft.png');
-img2 = imreadgrey('images/guitarRight.png');
+img1 = imreadgrey('images/booksLeft2.png');
+img2 = imreadgrey('images/booksRight2.png');
 
 %img1 = imreadgrey('images/spaceConsoleLeftCut.png');
 %img2 = imreadgrey('images/spaceConsoleRightCut.png');
