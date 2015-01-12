@@ -61,7 +61,8 @@ hold off;
 [K, R, t] = decomposeP(P);
 
 % Camera position in 3D word space
-c = [-5, -10, 8];
+c_left = [-5, -10, 8];
+c = [5, -10, 8];
 
 % To test, t sould be equal to t = -R * c;
 t1 = -R * c';

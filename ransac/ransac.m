@@ -11,8 +11,11 @@ clear all;
 %img1 = imreadgrey('images/lena.jpg');
 %img2 = imreadgrey('images/lena_scalrot.jpg');
 
-img1 = imreadgrey('images/cube_left.png');
-img2 = imreadgrey('images/cube_right.png');
+img1 = imreadgrey('images/guitarLeft.png');
+img2 = imreadgrey('images/guitarRight.png');
+
+%img1 = imreadgrey('images/spaceConsoleLeftCut.png');
+%img2 = imreadgrey('images/spaceConsoleRightCut.png');
 
 n = 4; %- the number of random points to pick every iteration in order to create the transform.
 k = 1000; % - the number of iterations to run
