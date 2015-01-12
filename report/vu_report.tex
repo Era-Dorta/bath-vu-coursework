@@ -15,13 +15,33 @@ Bath University}
 \maketitle
  
 \section{Introduction}
- 
 
-\section{The problem}
+The main objectives of this unit are to acquire the fundamentals of Computer Vision.
+In order to gather this skills, we will attempt to build a stereo reconstruction system.
+Using a bottom-up approach the following steps will be taken:
+\begin{enumerate}
+\item Image convolution, transforming using kernel matrices.
+\item Feature construction, detecting scale invariant interest points in images.
+\item Matching, using the previous points to match two images.
+\item Stereo reconstruction, rebuilding 3D points from 2D matched points in stereo images.
+\end{enumerate}
+
+\section{Literature review}
 
 
-\section{Results}
+\section{Convolution}
 
+Transforming images has artistic and practical applications, for instance blurring certain parts in a person face to hide defects or detecting borders with differential operators.
+For simplicity we will restrict ourselves to gray images, defined as two-dimensional $n \times m$ matrices where each element represents the intensity, and is in the range $\lbrace  0, 1 \rbrace$ where 0 is black and 1 is white.
+A convolution kernel $k$, is defined as a $k_1 \times k_2$ matrix, such that $k_1 \leqslant n$ and $k_2 \leqslant m$.
+When an image $I_0$ is convoluted with a kernel, a new image $I_1$ is generated, such that each element in the second image is calculated as follows WRITE IT AS EQUATION OR EXPLAIN IT OTHERWISE.
+The advantage in this definition is that, it gives a common framework for every possible transformation; so we only need to change the kernel to fit our needs.
+However, we need to specify what will happen to the borders of the matrix, leave them as they are, set them to zero, compute circularly, etc; and where does the convolution start with kernel with an even number of columns or rows.
 
+An interesting property of convolutions is the \emph{convolution theorem}, which states that $g * h = F^{-1} ( F(g) \cdot F(h) ) $.
+This property allows to transform the images into the Fourier domain, apply the convolution, transform back and obtain the same results with less computational cost.
+Below we show some examples of our convolution code as well as a table comparing the performance of our initial code, our code with the Fourier transform and Matlab's implementation.
 
 \end{document}
+
+\section{Results}
