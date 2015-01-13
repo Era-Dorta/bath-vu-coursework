@@ -7,14 +7,14 @@ function [ sift_indices, sift_descriptors, xind, yind, zind, sigma_vec, theta ] 
     
     img = imread(imgPath);
 
-    %If image is not in gray scale then convert it
+    % If image is not in gray scale then convert it
     if size(img, 3) > 1
         img = rgb2gray(img);
     end
 
-    %Normalize image, pixels in range [0, 1]
+    % Normalize image, pixels in range [0, 1]
     img = double(img)/ 255;
-    %imshow(img);
+    % imshow(img);
 
 
     n = size(img, 2);
@@ -47,36 +47,36 @@ function [ sift_indices, sift_descriptors, xind, yind, zind, sigma_vec, theta ] 
     %% FINDING MAXIMA AND MINIMA
     q = imregionalmax(jmg) | imregionalmin(jmg);
 
-    %Clean up values too close to the edges
-    %In the first octave
+    % Clean up values too close to the edges
+    % In the first octave
     q(:,:,1) = 0;
-    %In the last octave
+    % In the last octave
     q(:,:,size(q,3)) = 0;
-    %In the first nine raws
+    % In the first nine raws
     q(1:9,:,:) = 0;
-    %In the last nine raws
+    % In the last nine raws
     q(size(q,1) - 9:size(q,1),:,:) = 0;
-    %In the first nine cols
+    % In the first nine cols
     q(:,1:9,:) = 0;
-    %In the last nine cols
+    % In the last nine cols
     q(:,size(q,1) - 9:size(q,2),:) = 0;
 
-    %Get all the indices iqual to 1 in q
+    % Get all the indices iqual to 1 in q
     flat_indices = find(q);
 
-    %Map them to 3d indices
+    % Map them to 3d indices
     [xind,yind,zind] = ind2sub(size(q), flat_indices);
 
     %% REJECTING WEAK POINTS
 
     if reject_weak_points
         for i=1:length(xind)
-            %Take 5x5 patches
+            % Take 5x5 patches
             sub_mat_indx = [xind(i) - 2: xind(i) + 2];
             sub_mat_indy = [yind(i) - 2: yind(i) + 2];
 
-            %Calculate partial derivatives with respect to x and y
-            %using neighbour differences 
+            % Calculate partial derivatives with respect to x and y
+            % using neighbour differences 
             sub_img = jmg(sub_mat_indx, sub_mat_indy, zind(i));
             dxright = conv2(sub_img, [-1, 1], 'same');
             dxleft = conv2(sub_img, [1, -1], 'same');
@@ -98,7 +98,7 @@ function [ sift_indices, sift_descriptors, xind, yind, zind, sigma_vec, theta ] 
             dxyleft = convn(dy, [1, -1], 'same');
             dxy = sqrt(dxyright.^2 + dxyleft.^2);
 
-            %Take the vale at the center -> the current pixel
+            % Take the value at the center -> the current pixel
             dx = dx(3,3);
             dy = dy(3,3);
             dxx = dxx(3,3);
@@ -118,7 +118,7 @@ function [ sift_indices, sift_descriptors, xind, yind, zind, sigma_vec, theta ] 
             r = 10;
             edge_threshold = (r + 1)^2 / r;
 
-            %Mark to discard values with less than 0.03
+            % Mark to discard values with less than 0.03
             if d_extremum_val < 0.03
                 xind(i) = -1;
                 yind(i) = -1;
@@ -139,9 +139,9 @@ function [ sift_indices, sift_descriptors, xind, yind, zind, sigma_vec, theta ] 
             end
         end
 
-        %Delete all values marked with invalid indexes
-        %If they were deleted inside the loop the indices would be wrong in
-        %the next loop iteration
+        % Delete all values marked with invalid indexes
+        % If they were deleted inside the loop the indices would be wrong in
+        % the next loop iteration
         xind = xind(xind~=-1);
         yind = yind(yind~=-1);
         zind = zind(zind~=-1);
@@ -150,7 +150,7 @@ function [ sift_indices, sift_descriptors, xind, yind, zind, sigma_vec, theta ] 
     %% ORIENTATION ASSIGMENT
     for i=1:length(xind)
         % sqrt( (L(x + 1, y) - L(x - 1, y))^2 + (L(x, y + 1) - L(x, y - 1))^2 )
-        %patch index = [-8, 7; -8, 7] -> 16x16 patch
+        % patch index = [-8, 7; -8, 7] -> 16x16 patch
          strength(:,:,i) = ( (gmg(xind(i) - 7: xind(i) + 8, yind(i) - 8:yind(i) + 7, zind(i)) ...
             - gmg(xind(i) - 9:xind(i) + 6, yind(i) - 8:yind(i) + 7, zind(i))).^2 + ...
             (gmg(xind(i) - 8: xind(i) + 7, yind(i) - 7:yind(i) + 8, zind(i)) ...
@@ -168,7 +168,7 @@ function [ sift_indices, sift_descriptors, xind, yind, zind, sigma_vec, theta ] 
 
     sift_descriptors = [];
     for i=1:length(xind)
-        %Take 16x16 patch
+        % Take 16x16 patch
         sub_mat_indx = [xind(i) - 7: xind(i) + 8];
         sub_mat_indy = [yind(i) - 7: yind(i) + 8];
 
@@ -180,16 +180,16 @@ function [ sift_indices, sift_descriptors, xind, yind, zind, sigma_vec, theta ] 
         magnitude_count = 0;
         point_descriptor = [];
 
-        %Divide patch in 4 sub patches
+        % Divide patch in 4 sub patches
         for j=1:4
             for k=1:4
                 sub_patch_angles = patch_angles([1 + (j - 1) * 4:j * 4], [1 + (k - 1) * 4:k*4]  );
                 sub_patch_magnitues = patch_magnitudes([1 + (j - 1) * 4:j * 4], [1 + (k - 1) * 4:k*4]  );
-                %Do a histogram for each angle
+                % Do a histogram for each angle
                 for alpha=0:45:359
                     for i1=1:4
                         for j1=1:4
-                            %Count the point if within the current angle range
+                            % Count the point if within the current angle range
                             if sub_patch_angles(i1, j1) > (- 180 + alpha) && ...
                                     sub_patch_angles(i1, j1) < (-135 + alpha)
                                 magnitude_count = magnitude_count + sub_patch_magnitues(i1,j1)*1.5;

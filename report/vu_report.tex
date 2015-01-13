@@ -86,9 +86,9 @@ SIFT features CITE LOWE PAPER provide a fairly robust method to detect points in
 A broad overview of the algorithm is:
 \begin{enumerate}
 \item \textbf{Extrema detection:} maximum and minimum intensity points are detected in a difference-of-Gaussian pyramid built with the input image.
-\item \textbf{Keypoints refinement:} point centrer in interpolated and weak points are rejected.
-\item \textbf{Orientation assignment:} orientation and strength of the keypoint are calculated.
-\item \textbf{Descriptor calculation:} a 128 feature vector is computed for each element.
+\item \textbf{Keypoint refinement:} point centrer in interpolated and weak points are rejected.
+\item \textbf{Orientation assignment:} orientation and strength of each keypoint are calculated.
+\item \textbf{Descriptor calculation:} a 128 feature vector is computed for every element.
 \end{enumerate}
 
 \begin{figure}[htbp]
@@ -107,7 +107,7 @@ A broad overview of the algorithm is:
 	\end{minipage}
 \end{figure}
 
-To construct the difference-of-Gaussian (DOG) structure, as shown in Figure~\ref{fig:difOfGauPyramid}, first a scale of blurred images is constructed.
+\textbf{Extrema detection} is computed using a difference-of-Gaussian (DOG) structure, as shown in Figure~\ref{fig:difOfGauPyramid}, first a scale of blurred images is constructed.
 The input image $I$ is convoluted with a Gaussian kernel $G$:
 
 \begin{equation}
@@ -129,6 +129,90 @@ D(x,y,\sigma) = L(x,y, k\sigma) - L(x,y, \sigma),
 
 where $D$ is the output image and $k$ is a constant multiplicative factor.
 Note that to provide an efficient implementation, the convolution and difference can be computed in the Fourier domain using the convolution theorem explained in Section~\ref{sec:convolution}.
+A example on how this DOG structure looks like is shown in Figure~\ref{fig:difOfGauSample}, where the sigma increases from left to right and from top to bottom.
+The keypoints selected will be those who are a maximum or a minimum in a $3 \times 3 \times 3$ cube region, so in their scale and the ones above and below.
+Selecting locations using this scheme allows to find interested points regardless of their scale, as we progress towards the top of the pyramid,  the local maximum or minima will be produced by bigger objects in $I$.
+In our implementation only one scale of the pyramid is calculated.
+
+Keypoint refinement is done with an optimization step which removes weak points and also improves their position.
+The new keypoint location $\mathbf{\hat{x}}$ will be:
+
+\begin{equation}
+\mathbf{\hat{x}} = - \frac{\partial^2 D^{-1}}{\partial \mathbf{x^2}} \frac{\partial D}{\partial \mathbf{x}},
+\end{equation}
+
+where $\mathbf{x}$ is the previous location and $D(\mathbf{x})$ is approximated with a Taylor expansion in the form of:
+
+\begin{equation}
+D(\mathbf{x}) = D + \frac{ \partial D^T}{\partial \mathbf{x}} \mathbf{x} + 0.5 \mathbf{x^T} \frac{\partial^2 D}{\partial \mathbf{x^2}}\mathbf{x}.
+\end{equation}
+
+Keypoints are rejected if they are weak or in an edge, any extrema is defined as weak if $D(\mathbf{x'}) < 0.03$, where $D(\mathbf{\hat{x}})$ is:
+
+\begin{equation}
+D(\mathbf{\hat{x}}) = D + 0.5 \frac{\partial D^T}{\partial \mathbf{x}}\mathbf{\hat{x}}.
+\end{equation}
+
+Edge elimination is performed when $R(\mathbf{H}) > f(r)$, where $\mathbf{H}$ is a $2 \times 2$ Hessian matrix, $r = 10$, $R(\mathbf{H})$ is defined as:
+
+\begin{equation}
+R(\mathbf{H})= \frac{ (D_{xx} + D_{yy})^2 }{ D_{xx} D_{yy} - (D_{xy})^2} ~ \text{where} ~ D_{\alpha \beta} = \frac{\partial^2 D}{\partial \alpha \partial \beta} ~  \text{for} ~ \alpha, \beta = x, y
+\end{equation}
+
+and 
+
+\begin{equation}
+f(r) = \frac{(r + 1)^2}{r}.
+\end{equation}
+
+\textbf{Orientation assignment} measures the point orientation using local images properties.
+Therefore, if a point is rotated the orientation will be the same.
+A gradient magnitude $m(x,y)$ and orientation angle $\theta(x,y)$ are computed as follows:
+
+\begin{equation}
+\begin{aligned}
+	m(x,y) &= \sqrt[]{(L(x+1,y,\sigma) - L(x-1,y,\sigma))^2 + (L(x,y+1,\sigma) - L(x,y-1,\sigma))^2}, \\
+	\theta(x,y) &= tan^{-1} \left( \left( L(x,y+1,\sigma) - L(x, y-1, \sigma) \right) / \left( L(x+1,y,\sigma) - L(x-1, y, \sigma) \right) \right),
+\end{aligned} \label{eq:conv}
+\end{equation}
+
+where $L$ is chosen to has the same sigma as the keypoint.
+
+\textbf{Descriptor calculation} uses orientation histograms from sample points near the extrema.
+For each keypoint a $16 \times 16$ region around it is chosen and the orientations for each pixel are calculated.
+$4 \times 4$ histograms are computed with 8 bins each; this 8-dimensional values are placed in an array forming a 128 element feature vector for each keypoint.
+Normalizing the vector to unit length improves invariance to illumination changes.
+
+
+\begin{figure}[htbp]
+        \centering
+        \begin{subfigure}[b]{0.45\textwidth}
+                \includegraphics[width=\textwidth]{images/sift2}
+                \caption{SIFT without weak and edge keypoint purge.}
+                \label{fig:sift1}
+        \end{subfigure}
+        \begin{subfigure}[b]{0.45\textwidth}
+                \includegraphics[width=\textwidth]{images/sift1}
+                \caption{SIFT with weak and edge keypoint removal.}
+                \label{fig:sift2}
+        \end{subfigure}
+        \begin{subfigure}[b]{0.45\textwidth}
+                \includegraphics[width=\textwidth]{images/surf1}
+                \caption{SURF with default parameters.}
+                \label{fig:surf1}
+        \end{subfigure}
+        \begin{subfigure}[b]{0.45\textwidth}
+                \includegraphics[width=\textwidth]{images/surf2}
+                \caption{SURF with the 120 strongest keypoints.}
+                \label{fig:surf2}
+        \end{subfigure}        
+        \caption{Comparative of our SIFT features with Matlab's SURF features.}\label{fig:featuresSample}
+\end{figure}
+
+
+\section{Matching}
+
+\section{Reconstruction}
 
 \end{document}
 
