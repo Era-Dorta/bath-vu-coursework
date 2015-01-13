@@ -31,6 +31,7 @@ Using a bottom-up approach the following steps will be taken:
 
 
 \section{Convolution}
+\label{sec:convolution}
 
 Transforming images has artistic and practical applications, for instance blurring certain parts in a person face to hide defects or detecting borders with differential operators.
 For simplicity we will restrict ourselves to gray images, defined as two-dimensional $n \times m$ matrices where each element represents the intensity, and is in the range $\lbrace  0, 1 \rbrace$ where 0 is black and 1 is white.
@@ -73,8 +74,61 @@ Below we show some examples of our convolution code, as well as a table comparin
 	\caption{Performance comparative of the convolution methods.}
 	\label{tb:convolutionPerfomance}
 \end{table}
+ 
+In Figure~\ref{fig:convolution} we see that the convolution theorem holds, and in Table~\ref{tb:convolutionPerfomance} that performing the operations in the Fourier domain and transforming back is more efficient.
 
-In Figure~\ref{fig:convolution} we see that the convolution theorem holds, and in Table~\ref{tb:convolutionPerfomance} that performing the operations in the Fourier domain and transforming back is more efficient. 
+CITE FOURIER TRANSFORM AND CONVOLUTION THEOREM
+
+\section{Features}
+
+Being able to detect features in images that are invariant to rotations, translations, scale and changes in illumination is an useful tool, with many applications such as image matching.
+SIFT features CITE LOWE PAPER provide a fairly robust method to detect points in an image with the aforementioned restrictions.
+A broad overview of the algorithm is:
+\begin{enumerate}
+\item \textbf{Extrema detection:} maximum and minimum intensity points are detected in a difference-of-Gaussian pyramid built with the input image.
+\item \textbf{Keypoints refinement:} point centrer in interpolated and weak points are rejected.
+\item \textbf{Orientation assignment:} orientation and strength of the keypoint are calculated.
+\item \textbf{Descriptor calculation:} a 128 feature vector is computed for each element.
+\end{enumerate}
+
+\begin{figure}[htbp]
+	\centering
+	\begin{minipage}[t]{.48\textwidth}
+		\centering
+		\includegraphics[width=1.05\textwidth]{images/diffOfGauFromPaper}
+		\caption{Pyramid of difference-of-Gaussian CITE LOWE.}
+		\label{fig:difOfGauPyramid}
+	\end{minipage} ~
+	\begin{minipage}[t]{.48\textwidth}
+		\centering
+		\includegraphics[width=1\textwidth]{images/dogSpace}
+		\caption{Example of a scale of a difference-of-Gaussian.}
+		\label{fig:difOfGauSample}
+	\end{minipage}
+\end{figure}
+
+To construct the difference-of-Gaussian (DOG) structure, as shown in Figure~\ref{fig:difOfGauPyramid}, first a scale of blurred images is constructed.
+The input image $I$ is convoluted with a Gaussian kernel $G$:
+
+\begin{equation}
+L(x,y,\sigma) = G(x,y,\sigma) * I(x,y),
+\end{equation}
+
+where $L$ is the output image, $*$ the convolution operator, $x$ and $y$ the pixel indices, and $G$ and Gaussian kernel defined as:
+
+\begin{equation}
+G(x,y,\sigma) = \frac{1}{2 \pi \sigma^2} e^{- \frac{x^2 + y^2}{2 \sigma^2}},
+\end{equation}
+
+where $\sigma$ is the standard deviation.
+Next, the DOG structure is computed as a difference of several $L$:
+
+\begin{equation}
+D(x,y,\sigma) = L(x,y, k\sigma) - L(x,y, \sigma),
+\end{equation}
+
+where $D$ is the output image and $k$ is a constant multiplicative factor.
+Note that to provide an efficient implementation, the convolution and difference can be computed in the Fourier domain using the convolution theorem explained in Section~\ref{sec:convolution}.
 
 \end{document}
 
