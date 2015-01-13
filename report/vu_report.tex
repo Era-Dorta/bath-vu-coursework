@@ -4,6 +4,8 @@
 \usepackage{amsmath,amsthm,amssymb,bm}
 \usepackage{graphicx}
 \usepackage{subcaption}
+\usepackage{placeins}
+\setlength{\parskip}{1em} %Paragraph spacing
  
 \begin{document}
   
@@ -184,7 +186,7 @@ $4 \times 4$ histograms are computed with 8 bins each; this 8-dimensional values
 Normalizing the vector to unit length improves invariance to illumination changes.
 
 
-\begin{figure}[htbp]
+\begin{figure}[htbp!]
         \centering
         \begin{subfigure}[b]{0.45\textwidth}
                 \includegraphics[width=\textwidth]{images/sift2}
@@ -209,8 +211,50 @@ Normalizing the vector to unit length improves invariance to illumination change
         \caption{Comparative of our SIFT features with Matlab's SURF features.}\label{fig:featuresSample}
 \end{figure}
 
-
+\FloatBarrier % Makes sure the previous figure does not go into the Matching section
 \section{Matching}
+
+In the image matching area an image $I_0$ is to be found under a certain affine transformation in another image $I_2$.
+The RANSAC (Random Sample Consensus) CITE RANSAC algorithm is a simple and fast approach to perform this task.
+Despite being originally designed to estimate the parameters that fit a mathematical model to a dataset which contains outliers, it can also be used to estimate the transformation that matches $I_0$ and $I_1$.
+
+We want to calculate the matrix $H$ that transforms from one image to the other, such that:
+
+\begin{equation}
+\begin{bmatrix}
+u^* \\ 
+v^* \\ 
+w^*
+\end{bmatrix}
+= 
+\begin{bmatrix}
+ h_{11} & h_{12} & h_{13} \\ 
+ h_{21} & h_{22} & h_{23}\\ 
+ h_{31} & h_{32} & h_{33}
+\end{bmatrix}
+\begin{bmatrix}
+x \\
+y \\
+z
+\end{bmatrix},
+\label{eq:originalH}
+\end{equation}
+
+where $u^*$, $v^*$ and $w^*$ are the scaled pixel coordinates in $I_1$ and $x$, $y$ and $z$ the scaled pixel coordinates in $I_0$.
+Collecting $H$ in rows, $H_i = \begin{bmatrix} h_{i1} & h_{i2} & h_{i3} \end{bmatrix}$ for $i = \lbrace 1,2,3 \rbrace$ and $\mathbf{x} = \begin{bmatrix} x & y & z \end{bmatrix}$ we can rewrite Equation~\ref{eq:originalH} into:
+
+\begin{equation}
+\begin{aligned}
+	u^* = H_1 \mathbf{x}, \: v^* &= H_2 \mathbf{x}, \: w^* = H_3 \mathbf{x}, \\ 
+	\text{enforcing} \: w^* &= 1, \\
+	u = \frac{H_1 \mathbf{x}}{ H_3 \mathbf{x}}, \: v &= \frac{H_2 \mathbf{x}}{ H_3 \mathbf{x}}, \: \text{hence} \\
+	uH_3\mathbf{x} - H_1\mathbf{x} &= 0, \\
+	vH_3\mathbf{x} - H_2\mathbf{x} &= 0.
+\end{aligned}
+\end{equation}
+
+We detect feature keypoints in both images and perform a matching on the feature space.
+
 
 \section{Reconstruction}
 
