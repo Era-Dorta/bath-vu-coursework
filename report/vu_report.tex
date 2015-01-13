@@ -3,6 +3,7 @@
 \usepackage[margin=1in]{geometry} 
 \usepackage{amsmath,amsthm,amssymb,bm}
 \usepackage{graphicx}
+\usepackage{subcaption}
  
 \begin{document}
   
@@ -40,7 +41,40 @@ However, we need to specify what will happen to the borders of the matrix, leave
 
 An interesting property of convolutions is the \emph{convolution theorem}, which states that $g * h = F^{-1} ( F(g) \cdot F(h) ) $.
 This property allows to transform the images into the Fourier domain, apply the convolution, transform back and obtain the same results with less computational cost.
-Below we show some examples of our convolution code as well as a table comparing the performance of our initial code, our code with the Fourier transform and Matlab's implementation.
+Below we show some examples of our convolution code, as well as a table comparing the performance of our initial code, our code with the Fourier transform and Matlab's implementation.
+
+\begin{figure}[htbp]
+        \centering
+        \begin{subfigure}[b]{0.32\textwidth}
+                \includegraphics[width=\textwidth]{images/conv1}
+                \caption{myconv.}
+                \label{fig:myconv}
+        \end{subfigure}
+        \begin{subfigure}[b]{0.32\textwidth}
+                \includegraphics[width=\textwidth]{images/conv2}
+                \caption{myconvFFT.}
+                \label{fig:myconvFFT}
+        \end{subfigure}
+        \begin{subfigure}[b]{0.32\textwidth}
+                \includegraphics[width=\textwidth]{images/conv2}
+                \caption{Matlab's conv2.}
+                \label{fig:conv2}
+        \end{subfigure}
+        \caption{Comparative of the different convolution codes with a horizontal sovel kernel $k = \left[-1, 1 \right]$.}\label{fig:convolution}
+\end{figure}
+
+\begin{table}[h]
+	\centering
+	\begin{tabular}{|c|c|c|c|}
+	\hline
+     & myconv & myconvFFT & Matlab's conv2 \\ \hline
+	Time & 0.658s   & 0.04s     & 0.002s   \\ \hline
+	\end{tabular}
+	\caption{Performance comparative of the convolution methods.}
+	\label{tb:convolutionPerfomance}
+\end{table}
+
+In Figure~\ref{fig:convolution} we see that the convolution theorem holds, and in Table~\ref{tb:convolutionPerfomance} that performing the operations in the Fourier domain and transforming back is more efficient. 
 
 \end{document}
 
