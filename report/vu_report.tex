@@ -253,8 +253,11 @@ Collecting $H$ in rows, $H_i = \begin{bmatrix} h_{i1} & h_{i2} & h_{i3} \end{bma
 \end{aligned}
 \end{equation}
 
-We detect feature keypoints in both images and perform a matching on the feature space.
-
+As shown in the previous equations, each match provides two equations to solve $H$.
+Since, we enforce the scale to be a homogeneous coordinate, $h_{33} = 1$ is no longer an unknown.
+For eight unknowns, eight equations are needed, so four points in each image are to be matched.
+In matrix notation, we will stack all the equations in a matrix $A$, such that $A\mathbf{h}=0$, where $\mathbf{h}$ is $H$ reshaped into a column vector.
+Singular value decomposition of $A$ can be computed to solve the system, $A = UZV^T$, where $U$ and $V$ are unitary, $Z$ is rectangular diagonal and $\mathbf{h} = V_{i9}$ for $i = \lbrace 1,2, \ldots, 9 \rbrace$.
 
 \section{Reconstruction}
 
