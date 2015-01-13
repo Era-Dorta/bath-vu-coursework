@@ -1,7 +1,7 @@
 close all;
 clear all;
 
-imgPath = 'testimage.jpg';
+imgPath = 'images/lena.jpg';
 [sift_indices, sift_descriptors, xind, yind, zind, sigma_vec, theta] = ...
     mysift(imgPath, [0:0.5:4], true);
 
