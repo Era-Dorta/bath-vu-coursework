@@ -305,7 +305,7 @@ Some results obtained with our code are shown in Figure~\ref{fig:ransacSample}.
 3D stereo reconstruction from a par of cameras involves three steps:
 \begin{enumerate}
 \item \textbf{Camera calibration:} compute camera model parameters.
-\item \textbf{Fundamental matrix:} estimate an $F$ matrix such that $x_0'Fx_1 = 0$, where $x_0$ and $x_1$ are corresponding points in two images.
+\item \textbf{Fundamental matrix:} estimate an $F$ matrix such that $\mathbf{x_1}'F\mathbf{x_2} = 0$, where $\mathbf{x_1}$ and $\mathbf{x_2}$ are corresponding points in two images.
 \item \textbf{Reconstruct 3D points:} once constrained by $F$, triangulate points position from the two images.
 \end{enumerate}
 
@@ -339,6 +339,33 @@ A\mathbf{p} = 0.
 Once we have solved the aforementioned equation with SVD, we need to decompose $P$ into $K[R|t]$.
 Since $K$ is an upper triangular matrix, we can use an a $RQ$ decomposition CITE on $P$, where $R$ is upper triangular and $Q$ is orthogonal.
 For the decomposition only the first three columns in $P$ will be used, and $\mathbf{t} = K^{-1}P_4$, where $P_4$ is the last column in $P$.
+
+% Figure with calibration object???
+
+\begin{figure}[htbp!]
+	\centering
+	\includegraphics[width=0.4\textwidth]{images/epipolarLines}
+	\caption{A point $\mathbf{x}$ in the left image is mapped via a plane $\boldsymbol{\pi}$ to a point $\mathbf{x}'$ in the right image.}\label{fig:epipolarLines}
+\end{figure}
+
+An important concept are epipolar lines and the fundamental matrix $F$.
+In Figure~\ref{fig:epipolarLines} we the geometrical relation of the projection a 3D world point $\mathbf{X}$ in two cameras.
+We define $\mathbf{e}$ and $\mathbf{e}'$ as the epipolar points (epipoles), $F$ is a matrix that satisfies $\mathbf{x_1}'F\mathbf{x_2} = 0$, where $\mathbf{x_1} = \begin{bmatrix} x_1 & y_1 & 1 \end{bmatrix}$ and $\mathbf{x_2} = \begin{bmatrix} x_2 & y_2 & 1 \end{bmatrix}$ are matching points in the left and right images respectively, and $\mathbf{l}'$ is a line such that $\mathbf{l}' = F\mathbf{x}$.
+
+To calculate $F$ a approach in Equations~\ref{eq:originalH} and~\ref{eq:derivatingH} can be used again.
+However, in the equation $A\mathbf{f} = 0$, this time $A$ will have following configuration:
+
+\begin{equation}
+\begin{bmatrix}
+x_{l1} x_{r1} & y_{l1} x_{r1} & x_{r1} & x_{l1} y_{r1} & y_{l1} y_{r1} & y_{r1} & x_{l1} & y_{l1} & 1 \\
+\vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots  \\
+x_{l8} x_{r8} & y_{l8} x_{r8} & x_{r8} & x_{l8} y_{r8} & y_{l8} y_{r8} & y_{r8} & x_{l8} & y_{l8} & 1 
+\end{bmatrix}
+\mathbf{f}
+= 0,
+\end{equation}
+
+where the $\mathbf{f}$ is $F$ reshaped in a column vector and the $l$ and $r$ indices represent points from the left and right images respectively. 
 
 \end{document}
 
