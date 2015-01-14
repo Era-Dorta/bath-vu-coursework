@@ -147,13 +147,13 @@ The new keypoint location $\mathbf{\hat{x}}$ will be:
 where $\mathbf{x}$ is the previous location and $D(\mathbf{x})$ is approximated with a Taylor expansion in the form of:
 
 \begin{equation}
-D(\mathbf{x}) = D + \frac{ \partial D^T}{\partial \mathbf{x}} \mathbf{x} + 0.5 \mathbf{x^T} \frac{\partial^2 D}{\partial \mathbf{x^2}}\mathbf{x}.
+D(\mathbf{x}) = D + \frac{ \partial D'}{\partial \mathbf{x}} \mathbf{x} + 0.5 \mathbf{x}' \frac{\partial^2 D}{\partial \mathbf{x^2}}\mathbf{x}.
 \end{equation}
 
 Keypoints are rejected if they are weak or in an edge, any extrema is defined as weak if $D(\mathbf{x'}) < 0.03$, where $D(\mathbf{\hat{x}})$ is:
 
 \begin{equation}
-D(\mathbf{\hat{x}}) = D + 0.5 \frac{\partial D^T}{\partial \mathbf{x}}\mathbf{\hat{x}}.
+D(\mathbf{\hat{x}}) = D + 0.5 \frac{\partial D'}{\partial \mathbf{x}}\mathbf{\hat{x}}.
 \end{equation}
 
 Edge elimination is performed when $R(\mathbf{H}) > f(r)$, where $\mathbf{H}$ is a $2 \times 2$ Hessian matrix, $r = 10$, $R(\mathbf{H})$ is defined as:
@@ -186,31 +186,30 @@ For each keypoint a $16 \times 16$ region around it is chosen and the orientatio
 $4 \times 4$ histograms are computed with 8 bins each; this 8-dimensional values are placed in an array forming a 128 element feature vector for each keypoint.
 Normalizing the vector to unit length improves invariance to illumination changes.
 
-
-\begin{figure}[htbp!]
-        \centering
-        \begin{subfigure}[b]{0.45\textwidth}
-                \includegraphics[width=\textwidth]{images/sift2}
-                \caption{SIFT without weak and edge keypoint purge.}
-                \label{fig:sift1}
-        \end{subfigure}
-        \begin{subfigure}[b]{0.45\textwidth}
-                \includegraphics[width=\textwidth]{images/sift1}
-                \caption{SIFT with weak and edge keypoint removal.}
-                \label{fig:sift2}
-        \end{subfigure}
-        \begin{subfigure}[b]{0.45\textwidth}
-                \includegraphics[width=\textwidth]{images/surf1}
-                \caption{SURF with default parameters.}
-                \label{fig:surf1}
-        \end{subfigure}
-        \begin{subfigure}[b]{0.45\textwidth}
-                \includegraphics[width=\textwidth]{images/surf2}
-                \caption{SURF with the 120 strongest keypoints.}
-                \label{fig:surf2}
-        \end{subfigure}        
-        \caption{Comparative of our SIFT features with Matlab's SURF features.}\label{fig:featuresSample}
-\end{figure}
+%\begin{figure}[htbp!]
+%        \centering
+%        \begin{subfigure}[b]{0.45\textwidth}
+%                \includegraphics[width=\textwidth]{images/sift2}
+%                \caption{SIFT without weak and edge keypoint purge.}
+%                \label{fig:sift1}
+%        \end{subfigure}
+%        \begin{subfigure}[b]{0.45\textwidth}
+%                \includegraphics[width=\textwidth]{images/sift1}
+%                \caption{SIFT with weak and edge keypoint removal.}
+%                \label{fig:sift2}
+%        \end{subfigure}
+%        \begin{subfigure}[b]{0.45\textwidth}
+%                \includegraphics[width=\textwidth]{images/surf1}
+%                \caption{SURF with default parameters.}
+%                \label{fig:surf1}
+%        \end{subfigure}
+%        \begin{subfigure}[b]{0.45\textwidth}
+%                \includegraphics[width=\textwidth]{images/surf2}
+%                \caption{SURF with the 120 strongest keypoints.}
+%                \label{fig:surf2}
+%        \end{subfigure}        
+%        \caption{Comparative of our SIFT features with Matlab's SURF features.}\label{fig:featuresSample}
+%\end{figure}
 
 \FloatBarrier % Makes sure the previous figure does not go into the Matching section
 \section{Matching}
@@ -271,13 +270,15 @@ Collecting $H$ in rows, $H_i = \begin{bmatrix} h_{i1} & h_{i2} & h_{i3} \end{bma
 	uH_3\mathbf{x} - H_1\mathbf{x} &= 0, \\
 	vH_3\mathbf{x} - H_2\mathbf{x} &= 0.
 \end{aligned}
+\label{eq:derivatingH}
 \end{equation}
 
-As shown in the previous equations, each match provides two equations to solve $H$.
+Factoring out $H$, we can write the equations using matrix notation. 
+As shown above, each match provides two equations to solve $H$.
 Since, we enforce the scale to be a homogeneous coordinate, $h_{33} = 1$ is no longer an unknown.
 For eight unknowns, eight equations are needed, so four points in each image are to be matched.
 In matrix notation, we will stack all the equations in a matrix $A$, such that $A\mathbf{h}=0$, where $\mathbf{h}$ is $H$ reshaped into a column vector.
-Singular value decomposition of $A$ can be computed to solve the system, $A = UZV^T$, where $U$ and $V$ are unitary, $Z$ is rectangular diagonal and $\mathbf{h} = V_{i9}$ for $i = \lbrace 1,2, \ldots, 9 \rbrace$.
+Singular value decomposition of $A$ can be computed to solve the system, $A = UZV'$, where $U$ and $V$ are unitary, $Z$ is rectangular diagonal and $\mathbf{h} = V_{i9}$ for $i = \lbrace 1,2, \ldots, 9 \rbrace$.
 
 The metric to define if a $newH$ is better than a previously calculated $H$ is double; each match keypoint in $I_0$ is transformed with $newH$, the euclidean distance from the matched point in $I_1$ is calculated, and if it is below a threshold $t$, we count it as a good match.
 $newH$ is considered an improvement over $H$, if it produces more good matches than $H$ or the same number although with lower error.
@@ -300,6 +301,44 @@ Some results obtained with our code are shown in Figure~\ref{fig:ransacSample}.
 
 \FloatBarrier
 \section{Reconstruction}
+
+3D stereo reconstruction from a par of cameras involves three steps:
+\begin{enumerate}
+\item \textbf{Camera calibration:} compute camera model parameters.
+\item \textbf{Fundamental matrix:} estimate an $F$ matrix such that $x_0'Fx_1 = 0$, where $x_0$ and $x_1$ are corresponding points in two images.
+\item \textbf{Reconstruct 3D points:} once constrained by $F$, triangulate points position from the two images.
+\end{enumerate}
+
+We will model our cameras using the pinhole camera model, in this framework a world 3D point $\mathbf{x} = \begin{bmatrix} x & y & z & 1 \end{bmatrix}$ is projected into a 2D image point $\mathbf{u} = \begin{bmatrix} u & v & 1 \end{bmatrix}$ using the following equations:
+
+\begin{gather}
+	\mathbf{u}' = P \mathbf{x}', \label{eq:matrixP} \\
+	\mathbf{u}' = K [R | \mathbf{t}] \mathbf{x}', \label{eq:matrixRT}
+\end{gather}
+
+where $K$ is 
+\begin{equation}
+\begin{bmatrix}
+f_x & 0 & p_x \\ 
+0 & f_y & p_y \\ 
+0 & 0 & 1
+\end{bmatrix}
+\end{equation}
+
+with $f_x$ and $f_y$ are focal length parameters and $p_x$ and $p_y$ is the principal point, $P$ is a $3 \times 4$ projection matrix, $R$ is a $3 \times 3$ rotation matrix, $t$ is a translation column vector, making $[R|t]$ a $3 \times 4$ matrix.
+Note that $\mathbf{x}$ and $\mathbf{u}$ have a homogeneous coordinate.
+$K$ and $[R|\mathbf{t}]$ is commonly referred as camera intrinsics and extrinsics matrix respectively, and the estimation of their elements is known as \textbf{camera calibration}.
+
+Equation~\ref{eq:matrixP} can be solved following equivalent steps as to those used in Equations~\ref{eq:originalH} and~\ref{eq:derivatingH}, although with an extra coordinate in $\mathbf{x}$ and regarding $P$ as equivalent to $H$ with an added column.
+Therefore we can again stack several points in a matrix $A$, yet the increased number of unknowns determine that six points are needed to estimate $P$:
+
+\begin{equation}
+A\mathbf{p} = 0.
+\end{equation}
+
+Once we have solved the aforementioned equation with SVD, we need to decompose $P$ into $K[R|t]$.
+Since $K$ is an upper triangular matrix, we can use an a $RQ$ decomposition CITE on $P$, where $R$ is upper triangular and $Q$ is orthogonal.
+For the decomposition only the first three columns in $P$ will be used, and $\mathbf{t} = K^{-1}P_4$, where $P_4$ is the last column in $P$.
 
 \end{document}
 
