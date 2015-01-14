@@ -215,10 +215,29 @@ Normalizing the vector to unit length improves invariance to illumination change
 \FloatBarrier % Makes sure the previous figure does not go into the Matching section
 \section{Matching}
 
-In the image matching area an image $I_0$ is to be found under a certain affine transformation in another image $I_2$.
+In the image matching area an image $I_0$ is to be found under a certain affine transformation in another image $I_1$.
+Due to camera measurement errors, changes in illumination and other factors, a global optimal solution is computationally expensive.
 The RANSAC (Random Sample Consensus) CITE RANSAC algorithm is a simple and fast approach to perform this task.
-Despite being originally designed to estimate the parameters that fit a mathematical model to a dataset which contains outliers, it can also be used to estimate the transformation that matches $I_0$ and $I_1$.
+Despite being originally designed to estimate the parameters that fit a mathematical model to a dataset which contains outliers, it can also be used to estimate the transformation $H$ that matches $I_0$ and $I_1$.
+A general overview of the algorithm is given below:
 
+\begin{algorithm}[H]
+ \caption{RANSAC}
+ \KwData{A pair of images $I_0$, $I_1$, $k$ number of iterations, distance threshold $t$.}
+ \KwResult{Homography matrix $H$.}
+ $f_0$, $f_1$ = detectKeypoints($I_0$, $I_1$)\;
+ $m$ = matchFeatures($f_0$, $f_1$)\;
+ $H = identity$\;
+ \For{$i\leftarrow 0$ \KwTo $k$ }{
+  $rp$ = pickRandomPoints($m$)\;
+  $newH$ = computeHomography($rp$)\;
+  \If{$newH$ is better than $H$}{
+   $H = newH$\;
+   }
+ }
+\end{algorithm}
+
+To detect and match the keypoints, our implementation uses SURF features CITATION.
 We want to calculate the matrix $H$ that transforms from one image to the other, such that:
 
 \begin{equation}
@@ -260,25 +279,26 @@ For eight unknowns, eight equations are needed, so four points in each image are
 In matrix notation, we will stack all the equations in a matrix $A$, such that $A\mathbf{h}=0$, where $\mathbf{h}$ is $H$ reshaped into a column vector.
 Singular value decomposition of $A$ can be computed to solve the system, $A = UZV^T$, where $U$ and $V$ are unitary, $Z$ is rectangular diagonal and $\mathbf{h} = V_{i9}$ for $i = \lbrace 1,2, \ldots, 9 \rbrace$.
 
-\begin{algorithm}[H]
- \caption{RANSAC}
- \KwData{$I_0$, $I_1$ a pair of images, $k$ number of iterations, $t$ distance threshold.}
- \KwResult{$H$ homography matrix between $I_0$ and $I_1$.}
- $f_0$, $f_1$ = detectKeypoints($I_0$, $I_1$)\;
- $m$ = matchFeatures($f_0$, $f_1$)\;
- $H = identity$\;
- \For{$i\leftarrow 0$ \KwTo $k$ }{
-  $rp$ = pickRandomPoints($m$)\;
-  $newH$ = computeHomography($rp$)\;
-  \If{$newH$ is better than $H$}{
-   $H = newH$\;
-   }
- }
-\end{algorithm}
+The metric to define if a $newH$ is better than a previously calculated $H$ is double; each match keypoint in $I_0$ is transformed with $newH$, the euclidean distance from the matched point in $I_1$ is calculated, and if it is below a threshold $t$, we count it as a good match.
+$newH$ is considered an improvement over $H$, if it produces more good matches than $H$ or the same number although with lower error.
+Some results obtained with our code are shown in Figure~\ref{fig:ransacSample}.
 
-In our implementation the keypoints are detected and matched using SURF features CITATION.
-A transformation 
+\begin{figure}[htbp!]
+        \centering
+        \begin{subfigure}[b]{0.7\textwidth}
+                \includegraphics[width=\textwidth]{images/ransac1}
+                \caption{A synthetic test.}
+                \label{fig:ransac1}
+        \end{subfigure}    
+        \begin{subfigure}[b]{0.7\textwidth}
+                \includegraphics[width=\textwidth]{images/ransac2}
+                \caption{Matching a box, images from SIFT paper CITE.}
+                \label{fig:ransac2}
+        \end{subfigure} 
+        \caption{Samples of $H$ computation, left is $I_0$, centre is $I_1$ and right is $I_0 * H$. Keypoints matching between input images is shown for clarity.}\label{fig:ransacSample}
+\end{figure}
 
+\FloatBarrier
 \section{Reconstruction}
 
 \end{document}
