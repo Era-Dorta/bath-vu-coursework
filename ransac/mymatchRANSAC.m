@@ -1,9 +1,14 @@
-function [ best_model ] = mymatchRANSAC( img1, img2, n, k, t, verbose )
+function [ best_model ] = mymatchRANSAC( img1, img2, k, t, verbose )
 
-%% Detect surf features on both images
-rng('default'); % Set random seed to default
 tic;
 
+rng('default'); % Set random seed to default
+
+% The number of random points to pick every iteration in order to be able
+% to solve the transformation matrix
+n = 4;
+
+%% Detect surf features on both images
 points1 = detectSURFFeatures(img1);
 [features1, validPoints1] = extractFeatures(img1, points1);
 

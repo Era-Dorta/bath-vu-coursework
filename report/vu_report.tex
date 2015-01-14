@@ -6,6 +6,7 @@
 \usepackage{subcaption}
 \usepackage{placeins}
 \setlength{\parskip}{1em} %Paragraph spacing
+\usepackage[ruled]{algorithm2e}
  
 \begin{document}
   
@@ -258,6 +259,25 @@ Since, we enforce the scale to be a homogeneous coordinate, $h_{33} = 1$ is no l
 For eight unknowns, eight equations are needed, so four points in each image are to be matched.
 In matrix notation, we will stack all the equations in a matrix $A$, such that $A\mathbf{h}=0$, where $\mathbf{h}$ is $H$ reshaped into a column vector.
 Singular value decomposition of $A$ can be computed to solve the system, $A = UZV^T$, where $U$ and $V$ are unitary, $Z$ is rectangular diagonal and $\mathbf{h} = V_{i9}$ for $i = \lbrace 1,2, \ldots, 9 \rbrace$.
+
+\begin{algorithm}[H]
+ \caption{RANSAC}
+ \KwData{$I_0$, $I_1$ a pair of images, $k$ number of iterations, $t$ distance threshold.}
+ \KwResult{$H$ homography matrix between $I_0$ and $I_1$.}
+ $f_0$, $f_1$ = detectKeypoints($I_0$, $I_1$)\;
+ $m$ = matchFeatures($f_0$, $f_1$)\;
+ $H = identity$\;
+ \For{$i\leftarrow 0$ \KwTo $k$ }{
+  $rp$ = pickRandomPoints($m$)\;
+  $newH$ = computeHomography($rp$)\;
+  \If{$newH$ is better than $H$}{
+   $H = newH$\;
+   }
+ }
+\end{algorithm}
+
+In our implementation the keypoints are detected and matched using SURF features CITATION.
+A transformation 
 
 \section{Reconstruction}
 

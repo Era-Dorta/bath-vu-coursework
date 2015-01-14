@@ -14,12 +14,11 @@ img2 = imreadgrey('images/booksRight2.png');
 %img1 = imreadgrey('images/spaceConsoleLeftCut.png');
 %img2 = imreadgrey('images/spaceConsoleRightCut.png');
 
-n = 4; %- the number of random points to pick every iteration in order to create the transform.
 k = 1000; % - the number of iterations to run
 t = 5; % - the threshold for the square distance for a point to be considered as a match
 verbose = true; % true to display extra information
 
-aff_tr = mymatchRANSAC(img1, img2, n, k, t, verbose);
+aff_tr = mymatchRANSAC(img1, img2, k, t, verbose);
 
 tform = affine2d(aff_tr);
 resImg = imwarp(img1, tform);
