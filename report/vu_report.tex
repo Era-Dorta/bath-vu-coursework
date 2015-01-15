@@ -24,8 +24,9 @@ Bath University}
  
 \section{Introduction}
 
-The main objectives of this unit are to acquire the fundamentals of Computer Vision.
+The main objectives of this unit are to acquire some fundamental knowledge in Computer Vision.
 In order to gather this skills, we will attempt to build a stereo reconstruction system.
+We refer the readers to \cite{Hartley2004} book on reconstructing a real world scene given several images of it, for an in depth treatise of the topics covered in this report.
 Using a bottom-up approach the following steps will be taken:
 \begin{enumerate}
 \item Image convolution, transforming using kernel matrices.
@@ -33,9 +34,6 @@ Using a bottom-up approach the following steps will be taken:
 \item Matching, using the previous points to match two images.
 \item Stereo reconstruction, rebuilding 3D points from 2D matched points in stereo images.
 \end{enumerate}
-
-\section{Literature review}
-
 
 \section{Convolution}
 \label{sec:convolution}
@@ -188,30 +186,30 @@ For each keypoint a $16 \times 16$ region around it is chosen and the orientatio
 $4 \times 4$ histograms are computed with 8 bins each; this 8-dimensional values are placed in an array forming a 128 element feature vector for each keypoint.
 Normalizing the vector to unit length improves invariance to illumination changes.
 
-%\begin{figure}[htbp!]
-%        \centering
-%        \begin{subfigure}[b]{0.45\textwidth}
-%                \includegraphics[width=\textwidth]{images/sift2}
-%                \caption{SIFT without weak and edge keypoint purge.}
-%                \label{fig:sift1}
-%        \end{subfigure}
-%        \begin{subfigure}[b]{0.45\textwidth}
-%                \includegraphics[width=\textwidth]{images/sift1}
-%                \caption{SIFT with weak and edge keypoint removal.}
-%                \label{fig:sift2}
-%        \end{subfigure}
-%        \begin{subfigure}[b]{0.45\textwidth}
-%                \includegraphics[width=\textwidth]{images/surf1}
-%                \caption{SURF with default parameters.}
-%                \label{fig:surf1}
-%        \end{subfigure}
-%        \begin{subfigure}[b]{0.45\textwidth}
-%                \includegraphics[width=\textwidth]{images/surf2}
-%                \caption{SURF with the 120 strongest keypoints.}
-%                \label{fig:surf2}
-%        \end{subfigure}        
-%        \caption{Comparative of our SIFT features with Matlab's SURF features.}\label{fig:featuresSample}
-%\end{figure}
+\begin{figure}[htbp!]
+        \centering
+        \begin{subfigure}[b]{0.45\textwidth}
+                \includegraphics[width=\textwidth]{images/sift2}
+                \caption{SIFT without weak and edge keypoint purge.}
+                \label{fig:sift1}
+        \end{subfigure}
+        \begin{subfigure}[b]{0.45\textwidth}
+                \includegraphics[width=\textwidth]{images/sift1}
+                \caption{SIFT with weak and edge keypoint removal.}
+                \label{fig:sift2}
+        \end{subfigure}
+        \begin{subfigure}[b]{0.45\textwidth}
+                \includegraphics[width=\textwidth]{images/surf1}
+                \caption{SURF with default parameters.}
+                \label{fig:surf1}
+        \end{subfigure}
+        \begin{subfigure}[b]{0.45\textwidth}
+                \includegraphics[width=\textwidth]{images/surf2}
+                \caption{SURF with the 120 strongest keypoints.}
+                \label{fig:surf2}
+        \end{subfigure}        
+        \caption{Comparative of our SIFT features with Matlab's SURF features.}\label{fig:featuresSample}
+\end{figure}
 
 \FloatBarrier % Makes sure the previous figure does not go into the Matching section
 \section{Matching}
@@ -238,7 +236,7 @@ A general overview of the algorithm is given below:
  }
 \end{algorithm}
 
-To detect and match the keypoints, our implementation uses SURF features CITATION.
+To detect and match the keypoints, our implementation uses SURF features, \cite{Bay2006}.
 We want to calculate the matrix $H$ that transforms from one image to the other, such that:
 
 \begin{equation}
@@ -301,12 +299,12 @@ Some results obtained with our code are shown in Figure~\ref{fig:ransacSample}.
 
 \begin{figure}[htbp!]
         \centering
-        \begin{subfigure}[b]{0.7\textwidth}
+        \begin{subfigure}[b]{0.6\textwidth}
                 \includegraphics[width=\textwidth]{images/ransac2}
                 \caption{A synthetic test.}
                 \label{fig:ransac1}
         \end{subfigure}    
-        \begin{subfigure}[b]{0.7\textwidth}
+        \begin{subfigure}[b]{0.6\textwidth}
                 \includegraphics[width=\textwidth]{images/ransac1}
                 \caption{Matching a box, images taken from \cite{Lowe2004}.}
                 \label{fig:ransac2}
@@ -350,6 +348,9 @@ Therefore we can again stack several points in a matrix $A$, yet the increased n
 \begin{equation}
 A\mathbf{p} = 0.
 \end{equation}
+
+In the aforementioned technique, the use of a calibration cube is implicit in order to gather the six input points needed to estimate $P$.
+Nevertheless, there are more flexible techniques, such as \cite{Zhang2000} approach to calibrate cameras using 
 
 Once we have solved the aforementioned equation with SVD, we need to decompose $P$ into $K[R|t]$.
 Since $K$ is an upper triangular matrix, we can use an a $RQ$ decomposition on $P$, where $R$ is upper triangular and $Q$ is orthogonal, \cite{Francis1961}.
@@ -424,7 +425,7 @@ multiplying the first and second equation by the third,
 \end{aligned}
 \end{equation}
 
-doing the equivalent for the right camera equation and stacking the result below the left one,
+doing the equivalent for the right camera equation and stacking the equations in a matrix,
 
 \begin{equation}
 	\begin{bmatrix}
@@ -448,17 +449,22 @@ Some details can be seen in Figure~\ref{fig:stereoRecons2}, the two blue circles
 
 \begin{figure}[htbp]
         \centering
-        \begin{subfigure}[b]{0.32\textwidth}
+        \begin{subfigure}[b]{0.45\textwidth}
                 \includegraphics[width=\textwidth]{images/blender3}
                 \caption{Right view of our 3D scene.}
                 \label{fig:blender1}
         \end{subfigure}
-        \begin{subfigure}[b]{0.32\textwidth}
+        \begin{subfigure}[b]{0.45\textwidth}
                 \includegraphics[width=\textwidth]{images/blender6}
                 \caption{Left view of our 3D scene.}
                 \label{fig:blender2}
         \end{subfigure}
-        \begin{subfigure}[b]{0.55\textwidth}
+\end{figure}
+
+\begin{figure}[htbp]
+		\ContinuedFloat
+		\centering
+        \begin{subfigure}[b]{0.45\textwidth}
                 \includegraphics[width=\textwidth]{images/reconstructionMatching}
                 \caption{Keypoints matching from each camera view.}
                 \label{fig:stereoMatching}
