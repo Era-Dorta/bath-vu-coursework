@@ -25,14 +25,14 @@ Bath University}
 \section{Introduction}
 
 The main objectives of this unit are to acquire some fundamental knowledge in Computer Vision.
-In order to gather this skills, we will attempt to build a stereo reconstruction system.
+In order to gather this skills we will attempt to build a stereo reconstruction system.
 We refer the readers to \cite{Hartley2004} book on reconstructing a real world scene given several images of it, for an in depth treatise of the topics covered in this report.
 Using a bottom-up approach the following steps will be taken:
 \begin{enumerate}
-\item Image convolution, transforming using kernel matrices.
-\item Feature construction, detecting scale invariant interest points in images.
-\item Matching, using the previous points to match two images.
-\item Stereo reconstruction, rebuilding 3D points from 2D matched points in stereo images.
+\item \textbf{Image convolution:} transforming using kernel matrices.
+\item \textbf{Feature construction:} detecting scale invariant interest points in images.
+\item \textbf{Image matching:} using the previous points to match two images.
+\item \textbf{Stereo reconstruction:} rebuilding 3D points from 2D matched points in stereo images.
 \end{enumerate}
 
 \section{Convolution}
@@ -41,12 +41,24 @@ Using a bottom-up approach the following steps will be taken:
 Transforming images has artistic and practical applications, for instance blurring certain parts in a person face to hide defects or detecting borders with differential operators.
 For simplicity we will restrict ourselves to gray images, defined as two-dimensional $n \times m$ matrices where each element represents the intensity, and is in the range $\lbrace  0, 1 \rbrace$ where 0 is black and 1 is white.
 A convolution kernel $k$, is defined as a $k_1 \times k_2$ matrix, such that $k_1 \leqslant n$ and $k_2 \leqslant m$.
-When an image $I_0$ is convoluted with a kernel, a new image $I_1$ is generated, such that each element in the second image is calculated as follows WRITE IT AS EQUATION OR EXPLAIN IT OTHERWISE.
-The advantage in this definition is that, it gives a common framework for every possible transformation; so we only need to change the kernel to fit our needs.
-However, we need to specify what will happen to the borders of the matrix, leave them as they are, set them to zero, compute circularly, etc; and where does the convolution start with kernel with an even number of columns or rows.
+When an image $I_0$ is convoluted with a kernel, a new image $I_1$ is generated, such that each element in the second image is calculated as follows:
 
-An interesting property of convolutions is the \emph{convolution theorem}, which states that $g * h = F^{-1} ( F(g) \cdot F(h) ) $.
-This property allows to transform the images into the Fourier domain, apply the convolution, transform back and obtain the same results with less computational cost.
+\begin{equation}
+I(i,j) * k = \sum_{n = -N}^N \sum_{m = -M}^M k(n + N, m + M) I(n + i,m + j),
+\end{equation}
+
+where $*$ is the convolution operator, $i$ and $j$ are the pixel indices in the image, $N = \frac{1}{2}k_1$, $M = \frac{1}{2}k_2$; since $n$ and $m$ are also indices, the rounding mechanism for $N$ and $M$ becomes an implementation arbitrary criteria. 
+The advantage of this definition lies in the characterization of a flexible framework for several transformations; if most cases it will only be necessary to place the right values in the kernel to achieve the desired transformation.
+However, we need to specify what happens in the edges of the matrix, for instance copying them in the output image, computing the values circularly, setting them to zero, etc.
+
+An interesting property of convolutions is the \emph{convolution theorem}, which states:
+
+\begin{equation}
+g * h = F^{-1} ( F(g)  F(h) ),
+\end{equation}
+
+where $g$ and $h$ are the matrices to be convoluted, $F$ is the Fourier transform and $F^{-1}$ the inverse of the Fourier transform.
+This property allows to transform the images into the Fourier domain, apply the convolution, transform back and obtain the same results; performing the convolution in the indicated manner is beneficial, as it is more computationally efficient.
 Below we show some examples of our convolution code, as well as a table comparing the performance of our initial code, our code with the Fourier transform and Matlab's implementation.
 
 \begin{figure}[htbp]
@@ -80,16 +92,16 @@ Below we show some examples of our convolution code, as well as a table comparin
 	\label{tb:convolutionPerfomance}
 \end{table}
  
-In Figure~\ref{fig:convolution} we see that the convolution theorem holds, and in Table~\ref{tb:convolutionPerfomance} that performing the operations in the Fourier domain and transforming back is more efficient.
+In Figure~\ref{fig:convolution} we see that the convolution theorem holds, as the output images appear to be identical, and in Table~\ref{tb:convolutionPerfomance} we see that performing the operations in the Fourier domain and transforming back is more efficient.
 
 \section{Features}
 
-Being able to detect features in images that are invariant to rotations, translations, scale and changes in illumination is an useful tool, with many applications such as image matching.
-SIFT features, proposed by \cite{Lowe2004}, provide a fairly robust method to detect points in an image with the aforementioned restrictions.
-A broad overview of the algorithm is:
+Being able to detect image features that are invariant to rotations, translations and changes in illumination or scale is an useful tool, with many applications such as image matching.
+SIFT features, proposed by \cite{Lowe2004}, provide a fairly robust method to detect points in an image with the aforementioned characteristics.
+A broad overview of the algorithm is shown beneath:
 \begin{enumerate}
 \item \textbf{Extrema detection:} maximum and minimum intensity points are detected in a difference-of-Gaussian pyramid built with the input image.
-\item \textbf{Keypoint refinement:} point centrer in interpolated and weak points are rejected.
+\item \textbf{Keypoint refinement:} point centres are interpolated and weak features are rejected.
 \item \textbf{Orientation assignment:} orientation and strength of each keypoint are calculated.
 \item \textbf{Descriptor calculation:} a 128 feature vector is computed for every element.
 \end{enumerate}
@@ -111,13 +123,13 @@ A broad overview of the algorithm is:
 \end{figure}
 
 \textbf{Extrema detection} is computed using a difference-of-Gaussian (DOG) structure, as shown in Figure~\ref{fig:difOfGauPyramid}, first a scale of blurred images is constructed.
-The input image $I$ is convoluted with a Gaussian kernel $G$:
+The input image $I$ is convoluted with a Gaussian kernel:
 
 \begin{equation}
 L(x,y,\sigma) = G(x,y,\sigma) * I(x,y),
 \end{equation}
 
-where $L$ is the output image, $*$ the convolution operator, $x$ and $y$ the pixel indices, and $G$ and Gaussian kernel defined as:
+where $L$ is the output image, $x$ and $y$ the pixel indices, and $G$ and Gaussian kernel defined as:
 
 \begin{equation}
 G(x,y,\sigma) = \frac{1}{2 \pi \sigma^2} e^{- \frac{x^2 + y^2}{2 \sigma^2}},
@@ -131,11 +143,11 @@ D(x,y,\sigma) = L(x,y, k\sigma) - L(x,y, \sigma),
 \end{equation}
 
 where $D$ is the output image and $k$ is a constant multiplicative factor.
-Note that to provide an efficient implementation, the convolution and difference can be computed in the Fourier domain using the convolution theorem explained in Section~\ref{sec:convolution}.
-A example on how this DOG structure looks like is shown in Figure~\ref{fig:difOfGauSample}, where the sigma increases from left to right and from top to bottom.
+Note that to provide an efficient implementation, the convolution and difference can be computed in the Fourier domain, using the convolution theorem explained in Section~\ref{sec:convolution}.
+An example on how this DOG structure looks like is shown in Figure~\ref{fig:difOfGauSample}, where sigma increases from left to right and from top to bottom.
 The keypoints selected will be those who are a maximum or a minimum in a $3 \times 3 \times 3$ cube region, so in their scale and the ones above and below.
-Selecting locations using this scheme allows to find interested points regardless of their scale, as we progress towards the top of the pyramid,  the local maximum or minima will be produced by bigger objects in $I$.
-In our implementation only one scale of the pyramid is calculated.
+Selecting locations using this scheme allows to find keypoints regardless of their scale, as we progress towards the top of the pyramid,  the local maximum or minima will be produced by bigger objects in $I$.
+In our implementation only one octave of the pyramid is calculated.
 
 Keypoint refinement is done with an optimization step which removes weak points and also improves their position.
 The new keypoint location $\mathbf{\hat{x}}$ will be:
@@ -156,10 +168,10 @@ Keypoints are rejected if they are weak or in an edge, any extrema is defined as
 D(\mathbf{\hat{x}}) = D + 0.5 \frac{\partial D^T}{\partial \mathbf{x}}\mathbf{\hat{x}}.
 \end{equation}
 
-Edge elimination is performed when $R(\mathbf{H}) > f(r)$, where $\mathbf{H}$ is a $2 \times 2$ Hessian matrix, $r = 10$, $R(\mathbf{H})$ is defined as:
+Edge elimination is performed when $R(\mathbf{H}) > f(r)$, where $r = 10$, $\mathbf{H}$ is a $2 \times 2$ Hessian matrix and $R(\mathbf{H})$ is defined as:
 
 \begin{equation}
-R(\mathbf{H})= \frac{ (D_{xx} + D_{yy})^2 }{ D_{xx} D_{yy} - (D_{xy})^2} ~ \text{where} ~ D_{\alpha \beta} = \frac{\partial^2 D}{\partial \alpha \partial \beta} ~  \text{for} ~ \alpha, \beta = x, y
+R(\mathbf{H})= \frac{ (D_{xx} + D_{yy})^2 }{ D_{xx} D_{yy} - (D_{xy})^2}, \: \text{where} \: D_{\alpha \beta} = \frac{\partial^2 D}{\partial \alpha \partial \beta}, \:  \text{for} \: \alpha, \beta = x, y,
 \end{equation}
 
 and 
@@ -168,8 +180,8 @@ and
 f(r) = \frac{(r + 1)^2}{r}.
 \end{equation}
 
-\textbf{Orientation assignment} measures the point orientation using local images properties.
-The objective is that if a point is rotated in another image, the final descriptor will be the same in both.
+\textbf{Orientation assignment} measures the point orientation using local image properties.
+The objective is to obtain the same descriptor for a point regardless of image rotation, i.e. if a keypoint is defined by an object in a picture, we rotate the object and take another picture, the descriptor in the second picture should be identical to the first one.
 A gradient magnitude $m(x,y)$ and orientation angle $\theta(x,y)$ are computed as follows:
 
 \begin{equation}
@@ -179,12 +191,20 @@ A gradient magnitude $m(x,y)$ and orientation angle $\theta(x,y)$ are computed a
 \end{aligned} \label{eq:conv}
 \end{equation}
 
-where $L$ is chosen to has the same sigma as the keypoint.
+where $L$ is chosen to have the same sigma as the keypoint.
 
-\textbf{Descriptor calculation} uses orientation histograms from sample points near the extrema.
-For each keypoint a $16 \times 16$ region around it is chosen and the orientations for each pixel are calculated.
-$4 \times 4$ histograms are computed with 8 bins each; this 8-dimensional values are placed in an array forming a 128 element feature vector for each keypoint.
+\textbf{Descriptor calculation} uses orientation histograms from sample points close to the extrema.
+For each keypoint a $16 \times 16$ region around is selected, and the orientations for each pixel are calculated.
+$4 \times 4$ histograms are computed with 8 bins each; this 8-dimensional values are placed in an array forming a 128 element feature vector for each keypoint, as shown in Figure~\ref{fig:histoCal}.
 Normalizing the vector to unit length improves invariance to illumination changes.
+In Figure~\ref{fig:featuresSample}, keypoints detected in a sample image by our SIFT implementation and by Matlab's SURF features are shown.
+
+\begin{figure}[htbp!]
+	\centering
+	\includegraphics[scale=0.43]{images/siftHistograms}
+	\caption{SIFT histogram computation \cite{Gu2013}.}
+	\label{fig:histoCal}
+\end{figure}
 
 \begin{figure}[htbp!]
         \centering
@@ -218,6 +238,7 @@ In the image matching area an image $I_0$ is to be found under a certain affine 
 Due to camera measurement errors, changes in illumination and other factors, a global optimal solution is computationally expensive.
 The RANSAC (Random Sample Consensus) algorithm is a simple and fast approach to perform this task, \cite{Fischler1981}.
 Despite being originally designed to estimate the parameters that fit a mathematical model to a dataset which contains outliers, it can also be used to estimate the transformation $H$ that matches $I_0$ and $I_1$.
+Recently, researchers have proposed more efficient implementations, \cite{Dung2013}.
 A general overview of the algorithm is given below:
 
 \begin{algorithm}[H]
