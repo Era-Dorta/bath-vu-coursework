@@ -41,10 +41,10 @@ Using a bottom-up approach the following steps will be taken:
 Transforming images has artistic and practical applications, for instance blurring certain parts in a person face to hide defects or detecting borders with differential operators.
 For simplicity we will restrict ourselves to gray images, defined as two-dimensional $n \times m$ matrices where each element represents the intensity, and is in the range $\lbrace  0, 1 \rbrace$ where 0 is black and 1 is white.
 A convolution kernel $k$, is defined as a $k_1 \times k_2$ matrix, such that $k_1 \leqslant n$ and $k_2 \leqslant m$.
-When an image $I_0$ is convoluted with a kernel, a new image $I_1$ is generated, such that each element in the second image is calculated as follows:
+When an image $I$ is convoluted with a kernel, a new image $I'$ is generated, such that each element in the second image is calculated as follows:
 
 \begin{equation}
-I(i,j) * k = \sum_{n = -N}^N \sum_{m = -M}^M k(n + N, m + M) I(n + i,m + j),
+I'(i,j) = I(i,j) * k = \sum_{n = -N}^N \sum_{m = -M}^M k(n + N, m + M) I(n + i,m + j),
 \end{equation}
 
 where $*$ is the convolution operator, $i$ and $j$ are the pixel indices in the image, $N = \frac{1}{2}k_1$, $M = \frac{1}{2}k_2$; since $n$ and $m$ are also indices, the rounding mechanism for $N$ and $M$ becomes an implementation arbitrary criteria. 
@@ -208,22 +208,22 @@ In Figure~\ref{fig:featuresSample}, keypoints detected in a sample image by our 
 
 \begin{figure}[htbp!]
         \centering
-        \begin{subfigure}[b]{0.45\textwidth}
+        \begin{subfigure}[b]{0.49\textwidth}
                 \includegraphics[width=\textwidth]{images/sift2}
-                \caption{SIFT without weak and edge keypoint purge.}
+                \caption{Basic SIFT result.}
                 \label{fig:sift1}
         \end{subfigure}
-        \begin{subfigure}[b]{0.45\textwidth}
+        \begin{subfigure}[b]{0.49\textwidth}
                 \includegraphics[width=\textwidth]{images/sift1}
                 \caption{SIFT with weak and edge keypoint removal.}
                 \label{fig:sift2}
         \end{subfigure}
-        \begin{subfigure}[b]{0.45\textwidth}
+        \begin{subfigure}[b]{0.49\textwidth}
                 \includegraphics[width=\textwidth]{images/surf1}
                 \caption{SURF with default parameters.}
                 \label{fig:surf1}
         \end{subfigure}
-        \begin{subfigure}[b]{0.45\textwidth}
+        \begin{subfigure}[b]{0.49\textwidth}
                 \includegraphics[width=\textwidth]{images/surf2}
                 \caption{SURF with the 120 strongest keypoints.}
                 \label{fig:surf2}
@@ -234,19 +234,19 @@ In Figure~\ref{fig:featuresSample}, keypoints detected in a sample image by our 
 \FloatBarrier % Makes sure the previous figure does not go into the Matching section
 \section{Matching}
 
-In the image matching area an image $I_0$ is to be found under a certain affine transformation in another image $I_1$.
+In the image matching area, an image $I$ is to be found under a certain affine transformation in another image $I'$.
 Due to camera measurement errors, changes in illumination and other factors, a global optimal solution is computationally expensive.
 The RANSAC (Random Sample Consensus) algorithm is a simple and fast approach to perform this task, \cite{Fischler1981}.
-Despite being originally designed to estimate the parameters that fit a mathematical model to a dataset which contains outliers, it can also be used to estimate the transformation $H$ that matches $I_0$ and $I_1$.
+Despite being originally designed to estimate the parameters that fit a mathematical model to a dataset which contains outliers, it can also be used to estimate the transformation $H$ that matches $I$ and $I'$.
 Recently, researchers have proposed more efficient implementations, \cite{Dung2013}.
 A general overview of the algorithm is given below:
 
 \begin{algorithm}[H]
  \caption{RANSAC}
- \KwData{A pair of images $I_0$ and $I_1$, $k$ number of iterations, distance threshold $t$.}
+ \KwData{A pair of images $I$ and $I'$, $k$ number of iterations, distance threshold $t$.}
  \KwResult{Homography matrix $H$.}
- $f_0$, $f_1$ = detectKeypoints($I_0$, $I_1$)\;
- $m$ = matchFeatures($f_0$, $f_1$)\;
+ $f$, $f'$ = detectKeypoints($I$, $I'$)\;
+ $m$ = matchFeatures($f$, $f'$)\;
  $H = identity$\;
  \For{$i\leftarrow 0$ \KwTo $k$ }{
   $rp$ = pickRandomPoints($m$)\;
@@ -280,7 +280,7 @@ w'
 \label{eq:originalH}
 \end{equation}
 
-where $u$, $\vv$ and $w$ are the scaled pixel coordinates in $I_1$ and $u'$, $\vv'$ and $w'$ the scaled pixel coordinates in $I_0$.
+where $u$, $\vv$ and $w$ are the scaled pixel coordinates in $I'$ and $u'$, $\vv'$ and $w'$ the scaled pixel coordinates in $I$.
 Collecting $H$ in rows, $H_i = \begin{bmatrix} h_{i1} & h_{i2} & h_{i3} \end{bmatrix}$ for $i = \lbrace 1,2,3 \rbrace$ and $\mathbf{u'} = \begin{bmatrix} u' & \vv' & w' \end{bmatrix}$ we can rewrite Equation~\ref{eq:originalH} into:
 
 \begin{equation}
@@ -314,7 +314,7 @@ For eight unknowns, eight equations are needed, so four points in each image are
 In matrix notation, we will stack all the equations in a matrix $A$, such that $A\mathbf{h}=0$, where $\mathbf{h}$ is $H$ reshaped into a column vector.
 Singular value decomposition of $A$ can be computed to solve the system, $A = UZV^T$, where $U$ and $V$ are unitary, $Z$ is rectangular diagonal and $\mathbf{h} = V_{i9}$ for $i = \lbrace 1,2, \ldots, 9 \rbrace$.
 
-The metric to define if a $newH$ is better than a previously calculated $H$ is double; each match keypoint in $I_0$ is transformed with $newH$, the euclidean distance from the matched point in $I_1$ is calculated, and if it is below a threshold $t$, we count it as a good match.
+The metric to define if a $newH$ is better than a previously calculated $H$ is double; each match keypoint in $I$ is transformed with $newH$, the euclidean distance from the matched point in $I'$ is calculated, and if it is below a threshold $t$, we count it as a good match.
 $newH$ is considered an improvement over $H$, if it produces more good matches than $H$ or the same number although with lower error.
 Some results obtained with our code are shown in Figure~\ref{fig:ransacSample}.
 
@@ -330,7 +330,7 @@ Some results obtained with our code are shown in Figure~\ref{fig:ransacSample}.
                 \caption{Matching a box, images taken from \cite{Lowe2004}.}
                 \label{fig:ransac2}
         \end{subfigure} 
-        \caption{Samples of $H$ computation, left is $I_0$, centre is $I_1$ and right is $I_0 * H$. Keypoints matching between input images is shown for clarity.}\label{fig:ransacSample}
+        \caption{Samples of $H$ computation, left is $I$, centre is $I'$ and right is $I * H$. Keypoints matching between input images is shown for clarity.}\label{fig:ransacSample}
 \end{figure}
 
 \FloatBarrier
@@ -413,10 +413,10 @@ Below a possible implementation in pseudocode in presented:
 
 \begin{algorithm}[H]
  \caption{Stereo Reconstruction}
- \KwData{A pair of images $I_0$ and $I_1$, projection matrices for two cameras $P_0$ and $P_1$.}
+ \KwData{A pair of images $I$ and $I'$, projection matrices for two cameras $P$ and $P'$.}
  \KwResult{Cloud of 3D points $\mathbf{X}$.}
- $f_0$, $f_1$ = detectKeypoints($I_0$, $I_1$)\;
- $m$ = matchFeatures($f_0$, $f_1$)\;
+ $f$, $f'$ = detectKeypoints($I$, $I'$)\;
+ $m$ = matchFeatures($f$, $f'$)\;
  \For{$i\leftarrow 1$ \KwTo $numMatches$ }{
 	$A$ = constructA($m(i)$)\;
 	$X(i)$ = SVD($A$)\;
