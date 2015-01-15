@@ -484,6 +484,9 @@ Some details can be seen in Figure~\ref{fig:stereoRecons2}, the two blue circles
 \FloatBarrier
 \section{Conclusion and future work}
 
-We have presented a mathematical  several 
+We have presented the mathematical derivations and algorithm implementations for convolution, keypoint feature detection, image matching, camera calibration and 3D stereo reconstruction.
+The next steps would be centred on improving the stereo reconstruction.
+In order to achieve a denser reconstruction more points have to be matched, a simple approach to this is to calculate epipolar lines of matching points and then do a neighbour pixel search along that line.
+Furthermore, to overcome distortions in the cameras and inherent errors in the numeric methods that are use to calibrate them, the epipolar lines can be forced to be horizontal; and recalibration can be done based on matching information.
 
 \end{document}
