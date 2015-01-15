@@ -405,23 +405,22 @@ For this task we have a set of correspondences:
 \end{equation}
 
 where the unknown is the 3D world object position $\mathbf{x}$.
-Clustering the rows of $P$, such as $P_i = \begin{bmatrix} p_{i1} & p_{i2} & p_{i3} & p_{i4}  \end{bmatrix}$ for $i = \lbrace 1, 2, 3 \rbrace$, and equivalently for $P'$.
+Clustering the rows of $P$, such as $P_i = \begin{bmatrix} p_{i1} & p_{i2} & p_{i3} & p_{i4}  \end{bmatrix}$ for $i = \lbrace 1, 2, 3 \rbrace$,
+
+\begin{equation}
+ u = P_1\mathbf{x}, \quad \vv = P_2\mathbf{x}, \quad 1 = P_3\mathbf{x},\\
+\end{equation}
+
+multiplying the first and second equation by the third,
 
 \begin{equation}
 \begin{aligned}
- u &= P_1\mathbf{x}, \quad \vv &= P_2\mathbf{x}, \quad 1 &= P_3\mathbf{x},\\
- u' &= P_1'\mathbf{x}, \quad \vv' &= P_2'\mathbf{x}, \quad 1 &= P_3'\mathbf{x},\\
+	uP_3\mathbf{x} &=  P_1\mathbf{x} \: \rightarrow  \: uP_3\mathbf{x} - P_1\mathbf{x} = 0,\\
+	\vv P_3\mathbf{x} &= P_2\mathbf{x} \: \rightarrow \: \vv P_3\mathbf{x} - P_2\mathbf{x} = 0,
 \end{aligned}
 \end{equation}
 
-from the third equations we have  $\mathbf{x} = \frac{1}{P_3}$ and $\mathbf{x} = \frac{1}{P_3'}$ respectively,
-
-\begin{equation}
-\begin{aligned}
-	uP_3\mathbf{x} - P_1\mathbf{x} &= 0, \quad \vv P_3\mathbf{x} - P_2\mathbf{x} = 0,\\
-	u'P_3'\mathbf{x} - P_1'\mathbf{x} &= 0, \quad \vv' P_3'\mathbf{x} - P_2'\mathbf{x} = 0,\\
-\end{aligned}
-\end{equation}
+doing the equivalent for the right camera equation and stacking the result below the left one,
 
 \begin{equation}
 	\begin{bmatrix}
@@ -435,8 +434,52 @@ from the third equations we have  $\mathbf{x} = \frac{1}{P_3}$ and $\mathbf{x} =
 	= \mathbf{0}^T,
 \end{equation}
 
-which can be solved with a singular value decomposition.
+which can be solved via singular value decomposition.
+Our implementation extracts the matches using SURF keypoints, however this produces a sparse reconstruction as only a small subset of points in the image is matched.
+In Figure~\ref{fig:stereoReconstruction} the reconstruction results are shown.
+The scene (modelled using Blender) contains some books on a self with a textured plane on the background CITE AUTHOR AND BLENDER.
+The cameras position can be seen on the upper sections of Figures~\ref{fig:blender1} and~\ref{fig:blender2}.
+The matching algorithm produces 87 points in this example, however only 75 are rendered due to some erroneous matches being discarded.
+Some details can be seen in Figure~\ref{fig:stereoRecons2}, the two blue circles depict both cameras position; the cloud has three distinctive clusters, the left one shows the points one the background, the centre-top one represents the points on the cover of the books, and the line-shaped cluster below the books, displays the points tracked on the background under the shelf.
+
+\begin{figure}[htbp]
+        \centering
+        \begin{subfigure}[b]{0.32\textwidth}
+                \includegraphics[width=\textwidth]{images/blender3}
+                \caption{Right view of our 3D scene.}
+                \label{fig:blender1}
+        \end{subfigure}
+        \begin{subfigure}[b]{0.32\textwidth}
+                \includegraphics[width=\textwidth]{images/blender6}
+                \caption{Left view of our 3D scene.}
+                \label{fig:blender2}
+        \end{subfigure}
+        \begin{subfigure}[b]{0.55\textwidth}
+                \includegraphics[width=\textwidth]{images/reconstructionMatching}
+                \caption{Keypoints matching from each camera view.}
+                \label{fig:stereoMatching}
+        \end{subfigure}
+        \begin{subfigure}[b]{0.45\textwidth}
+                \includegraphics[width=\textwidth]{images/reconstruction1}
+                \caption{Right view of the reconstructed points.}
+                \label{fig:stereoRecons1}
+        \end{subfigure}
+        \begin{subfigure}[b]{0.45\textwidth}
+                \includegraphics[width=\textwidth]{images/reconstruction3}
+                \caption{Left view of the reconstructed points.}
+                \label{fig:stereoRecons2}
+        \end{subfigure}
+        \begin{subfigure}[b]{0.45\textwidth}
+                \includegraphics[width=\textwidth]{images/reconstruction2}
+                \caption{Central view of the reconstructed points.}
+                \label{fig:stereoRecons3}
+        \end{subfigure}
+        \caption{Reconstructing 3D geometry from a simple scene with books on a shelf.}\label{fig:stereoReconstruction}
+\end{figure}
+
+\FloatBarrier
+\section{Conclusion and future work}
+
+We have presented a mathematical  several 
 
 \end{document}
-
-\section{Results}
