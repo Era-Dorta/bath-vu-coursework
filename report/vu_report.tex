@@ -7,6 +7,8 @@
 \usepackage{placeins}
 \setlength{\parskip}{1em} %Paragraph spacing
 \usepackage[ruled]{algorithm2e}
+\DeclareSymbolFont{matha}{OML}{txmi}{m}{it}% txfonts
+\DeclareMathSymbol{\vv}{\mathord}{matha}{118}
  
 \begin{document}
   
@@ -222,7 +224,7 @@ A general overview of the algorithm is given below:
 
 \begin{algorithm}[H]
  \caption{RANSAC}
- \KwData{A pair of images $I_0$, $I_1$, $k$ number of iterations, distance threshold $t$.}
+ \KwData{A pair of images $I_0$ and $I_1$, $k$ number of iterations, distance threshold $t$.}
  \KwResult{Homography matrix $H$.}
  $f_0$, $f_1$ = detectKeypoints($I_0$, $I_1$)\;
  $m$ = matchFeatures($f_0$, $f_1$)\;
@@ -241,9 +243,9 @@ We want to calculate the matrix $H$ that transforms from one image to the other,
 
 \begin{equation}
 \begin{bmatrix}
-u^* \\ 
-v^* \\ 
-w^*
+u \\ 
+\vv \\ 
+w
 \end{bmatrix}
 = 
 \begin{bmatrix}
@@ -259,21 +261,34 @@ z
 \label{eq:originalH}
 \end{equation}
 
-where $u^*$, $v^*$ and $w^*$ are the scaled pixel coordinates in $I_1$ and $x$, $y$ and $z$ the scaled pixel coordinates in $I_0$.
+where $u$, $\vv$ and $w$ are the scaled pixel coordinates in $I_1$ and $x$, $y$ and $z$ the scaled pixel coordinates in $I_0$.
 Collecting $H$ in rows, $H_i = \begin{bmatrix} h_{i1} & h_{i2} & h_{i3} \end{bmatrix}$ for $i = \lbrace 1,2,3 \rbrace$ and $\mathbf{x} = \begin{bmatrix} x & y & z \end{bmatrix}$ we can rewrite Equation~\ref{eq:originalH} into:
 
 \begin{equation}
 \begin{aligned}
-	u^* = H_1 \mathbf{x}, \: v^* &= H_2 \mathbf{x}, \: w^* = H_3 \mathbf{x}, \\ 
-	\text{enforcing} \: w^* &= 1, \\
-	u = \frac{H_1 \mathbf{x}}{ H_3 \mathbf{x}}, \: v &= \frac{H_2 \mathbf{x}}{ H_3 \mathbf{x}}, \: \text{hence} \\
-	uH_3\mathbf{x} - H_1\mathbf{x} &= 0, \\
-	vH_3\mathbf{x} - H_2\mathbf{x} &= 0.
+	u = H_1 \mathbf{x}, \: \vv &= H_2 \mathbf{x}, \: w = H_3 \mathbf{x}, \\ 
+	\text{enforcing} \: w &= 1, \\
+	u^* = \frac{H_1 \mathbf{x}}{ H_3 \mathbf{x}}, \: \vv^* &= \frac{H_2 \mathbf{x}}{ H_3 \mathbf{x}}, \: \text{hence} \\	
+	%
+	u^*H_3\mathbf{x} - H_1\mathbf{x} &= 0, \\
+	\vv^* H_3\mathbf{x} - H_2\mathbf{x} &= 0, thus\\
+	%
+	\begin{bmatrix}
+	-\mathbf{x} & \mathbf{0} & u^*\mathbf{x} \\
+	\mathbf{0} & -\mathbf{x} & \vv^*\mathbf{x}
+	\end{bmatrix}
+	%
+	\begin{bmatrix}
+	H_1^T \\
+	H_2^T \\ 
+	H_3^T 
+	\end{bmatrix}
+	&= \mathbf{0}^T,
 \end{aligned}
 \label{eq:derivatingH}
 \end{equation}
 
-Factoring out $H$, we can write the equations using matrix notation. 
+where $\mathbf{0} = \begin{bmatrix} 0 & 0 & 0 \end{bmatrix}$. 
 As shown above, each match provides two equations to solve $H$.
 Since, we enforce the scale to be a homogeneous coordinate, $h_{33} = 1$ is no longer an unknown.
 For eight unknowns, eight equations are needed, so four points in each image are to be matched.
@@ -305,11 +320,11 @@ Some results obtained with our code are shown in Figure~\ref{fig:ransacSample}.
 3D stereo reconstruction from a par of cameras involves three steps:
 \begin{enumerate}
 \item \textbf{Camera calibration:} compute camera model parameters.
-\item \textbf{Fundamental matrix:} estimate an $F$ matrix such that $\mathbf{x_1}'F\mathbf{x_2} = 0$, where $\mathbf{x_1}$ and $\mathbf{x_2}$ are corresponding points in two images.
+\item \textbf{Fundamental matrix:} estimate an $F$ matrix such that $\mathbf{u_1}'F\mathbf{u_2} = 0$, where $\mathbf{u_1}$ and $\mathbf{u_2}$ are corresponding points in two images.
 \item \textbf{Reconstruct 3D points:} once constrained by $F$, triangulate points position from the two images.
 \end{enumerate}
 
-We will model our cameras using the pinhole camera model, in this framework a world 3D point $\mathbf{x} = \begin{bmatrix} x & y & z & 1 \end{bmatrix}$ is projected into a 2D image point $\mathbf{u} = \begin{bmatrix} u & v & 1 \end{bmatrix}$ using the following equations:
+We will model our cameras using the pinhole camera model, in this framework a world 3D point $\mathbf{x} = \begin{bmatrix} x & y & z & 1 \end{bmatrix}$ is projected into a 2D image point $\mathbf{u} = \begin{bmatrix} u & \vv & 1 \end{bmatrix}$ using the following equations:
 
 \begin{gather}
 	\mathbf{u}' = P \mathbf{x}', \label{eq:matrixP} \\
@@ -348,24 +363,79 @@ For the decomposition only the first three columns in $P$ will be used, and $\ma
 	\caption{A point $\mathbf{x}$ in the left image is mapped via a plane $\boldsymbol{\pi}$ to a point $\mathbf{x}'$ in the right image.}\label{fig:epipolarLines}
 \end{figure}
 
-An important concept are epipolar lines and the fundamental matrix $F$.
-In Figure~\ref{fig:epipolarLines} we the geometrical relation of the projection a 3D world point $\mathbf{X}$ in two cameras.
-We define $\mathbf{e}$ and $\mathbf{e}'$ as the epipolar points (epipoles), $F$ is a matrix that satisfies $\mathbf{x_1}'F\mathbf{x_2} = 0$, where $\mathbf{x_1} = \begin{bmatrix} x_1 & y_1 & 1 \end{bmatrix}$ and $\mathbf{x_2} = \begin{bmatrix} x_2 & y_2 & 1 \end{bmatrix}$ are matching points in the left and right images respectively, and $\mathbf{l}'$ is a line such that $\mathbf{l}' = F\mathbf{x}$.
+Epipolar lines and the \textbf{fundamental matrix} $F$ are useful tools in stereo reconstruction.
+In Figure~\ref{fig:epipolarLines} the geometrical relation of the projection a 3D world point $\mathbf{X}$ in two cameras is shown.
+We define $\mathbf{e}$ and $\mathbf{e}'$ as the epipolar points (epipoles), $F$ is a matrix that satisfies $\mathbf{u_1}'F\mathbf{u_2} = 0$, where $\mathbf{u_1} = \begin{bmatrix} u_1 & \vv_1 & 1 \end{bmatrix}$ and $\mathbf{u_2} = \begin{bmatrix} u_2 & \vv_2 & 1 \end{bmatrix}$ are matching points in the left and right images respectively, and $\mathbf{l}'$ is a line such that $\mathbf{l}' = F\mathbf{x}$.
 
-To calculate $F$ a approach in Equations~\ref{eq:originalH} and~\ref{eq:derivatingH} can be used again.
+To calculate $F$ an approach in Equations~\ref{eq:originalH} and~\ref{eq:derivatingH} can be used again.
 However, in the equation $A\mathbf{f} = 0$, this time $A$ will have following configuration:
 
 \begin{equation}
 \begin{bmatrix}
-x_{l1} x_{r1} & y_{l1} x_{r1} & x_{r1} & x_{l1} y_{r1} & y_{l1} y_{r1} & y_{r1} & x_{l1} & y_{l1} & 1 \\
+u_{l1} u_{r1} & 	\vv_{l1} u_{r1} & u_{r1} & u_{l1} \vv_{r1} & \vv_{l1} \vv_{r1} & \vv_{r1} & u_{l1} & \vv_{l1} & 1 \\
 \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots  \\
-x_{l8} x_{r8} & y_{l8} x_{r8} & x_{r8} & x_{l8} y_{r8} & y_{l8} y_{r8} & y_{r8} & x_{l8} & y_{l8} & 1 
+u_{l8} u_{r8} & \vv_{l8} u_{r8} & u_{r8} & u_{l8} \vv_{r8} & \vv_{l8} \vv_{r8} & \vv_{r8} & u_{l8} & \vv_{l8} & 1 
 \end{bmatrix}
 \mathbf{f}
 = 0,
 \end{equation}
 
-where the $\mathbf{f}$ is $F$ reshaped in a column vector and the $l$ and $r$ indices represent points from the left and right images respectively. 
+where the $\mathbf{f}$ is $F$ reshaped in a column vector and the $l$ and $r$ indices represent points from the left and right images respectively; $F$ can be estimated using SVD.
+
+Since we have calculated all the necessary parameters for each camera and their relationship, we can now proceed to stereo reconstruction.
+Below a possible implementation in pseudocode in presented:
+
+\begin{algorithm}[H]
+ \caption{Stereo Reconstruction}
+ \KwData{A pair of images $I_0$ and $I_1$, projection matrices for two cameras $P_0$ and $P_1$.}
+ \KwResult{Cloud of 3D points $\mathbf{X}$.}
+ $f_0$, $f_1$ = detectKeypoints($I_0$, $I_1$)\;
+ $m$ = matchFeatures($f_0$, $f_1$)\;
+ \For{$i\leftarrow 1$ \KwTo $numMatches$ }{
+	$A$ = constructA($m(i)$)\;
+	$X(i)$ = SVD($A$)\;
+ }
+ displayCloud(X)\;
+\end{algorithm}
+
+For this task we have a set of correspondences:
+
+\begin{equation}
+ \mathbf{u_{i}} = P\mathbf{x}, \quad \mathbf{u'_{i}} = P'\mathbf{x},
+\end{equation}
+
+where the unknown is the 3D world object position $\mathbf{x}$.
+Clustering the rows of $P$, such as $P_i = \begin{bmatrix} p_{i1} & p_{i2} & p_{i3} & p_{i4}  \end{bmatrix}$ for $i = \lbrace 1, 2, 3 \rbrace$, and equivalently for $P'$.
+
+\begin{equation}
+\begin{aligned}
+ u &= P_1\mathbf{x}, \quad \vv &= P_2\mathbf{x}, \quad 1 &= P_3\mathbf{x},\\
+ u' &= P_1'\mathbf{x}, \quad \vv' &= P_2'\mathbf{x}, \quad 1 &= P_3'\mathbf{x},\\
+\end{aligned}
+\end{equation}
+
+from the third equations we have  $\mathbf{x} = \frac{1}{P_3}$ and $\mathbf{x} = \frac{1}{P_3'}$ respectively,
+
+\begin{equation}
+\begin{aligned}
+	uP_3\mathbf{x} - P_1\mathbf{x} &= 0, \quad \vv P_3\mathbf{x} - P_2\mathbf{x} = 0,\\
+	u'P_3'\mathbf{x} - P_1'\mathbf{x} &= 0, \quad \vv' P_3'\mathbf{x} - P_2'\mathbf{x} = 0,\\
+\end{aligned}
+\end{equation}
+
+\begin{equation}
+	\begin{bmatrix}
+	uP_3 - P_1 \\
+	\vv P_3 - P_2 \\
+	u'P_3' - P_1' \\
+	\vv' P_3' - P_2'	
+	\end{bmatrix}
+	%
+	\mathbf{x}'
+	= \mathbf{0}^T,
+\end{equation}
+
+which can be solved with a singular value decomposition.
 
 \end{document}
 

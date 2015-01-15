@@ -5,4 +5,5 @@ images/*
 *.synctex.gz
 *.bbl
 *.out
+*.dvi
 *~
