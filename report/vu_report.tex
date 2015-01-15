@@ -341,7 +341,7 @@ Some results obtained with our code are shown in Figure~\ref{fig:ransacSample}.
 \FloatBarrier
 \section{Reconstruction}
 
-3D stereo reconstruction from a par of cameras involves three steps:
+3D stereo reconstruction from a pair of cameras involves three steps:
 \begin{enumerate}
 \item \textbf{Camera calibration:} compute camera model parameters.
 \item \textbf{Fundamental matrix:} estimate an $F$ matrix such that $\mathbf{u}'^TF\mathbf{u} = 0$, where $\mathbf{u}$ and $\mathbf{u}'$ are corresponding points in two images.
@@ -364,22 +364,23 @@ f_x & 0 & p_x \\
 \end{bmatrix}
 \end{equation}
 
-with $f_x$ and $f_y$ are focal length parameters and $p_x$ and $p_y$ is the principal point, $P$ is a $3 \times 4$ projection matrix, $R$ is a $3 \times 3$ rotation matrix, $t$ is a translation column vector, making $[R|t]$ a $3 \times 4$ matrix.
+with $f_x$ and $f_y$ are focal length parameters and $p_x$ and $p_y$ are the coordinate of the principal point, $P$ is a $3 \times 4$ projection matrix, $R$ is a $3 \times 3$ rotation matrix, $t$ is a translation column vector, making $[R|t]$ a $3 \times 4$ matrix.
 Note that $\mathbf{x}$ and $\mathbf{u}$ have a homogeneous coordinate.
-$K$ and $[R|\mathbf{t}]$ is commonly referred as camera intrinsics and extrinsics matrix respectively, and the estimation of their elements is known as \textbf{camera calibration}.
+$K$ is commonly referred as camera intrinsics matrix, $[R|\mathbf{t}]$ is called camera extrinsics matrix, and the estimation of their elements is known as \textbf{camera calibration}.
 
-Equation~\ref{eq:matrixP} can be solved following equivalent steps as to those used in Equations~\ref{eq:originalH} and~\ref{eq:derivatingH}, although with an extra coordinate in $\mathbf{x}$ and regarding $P$ as equivalent to $H$ with an added column.
-Therefore we can again stack several points in a matrix $A$, yet the increased number of unknowns determine that six points are needed to estimate $P$:
+Equation~\ref{eq:matrixP} can be solved following equivalent steps as to those used in Equations~\ref{eq:originalH} and~\ref{eq:derivatingH}, although with an extra coordinate in $\mathbf{x}$, and regarding $P$ as equivalent to $H$ with an added column.
+Therefore we can again stack several points in a matrix $A$, yet the increased number of unknowns determine that six points are needed to estimate $P$,
 
 \begin{equation}
-A\mathbf{p} = 0.
+A\mathbf{p} = 0,
 \end{equation}
 
-In the aforementioned technique, the use of a calibration cube is implicit in order to gather the six input points needed to estimate $P$.
-Nevertheless, there are more flexible techniques, such as \cite{Zhang2000} approach to calibrate cameras using 
+where $\mathbf{p}$ is $P$ reshaped into a column vector.
+In the aforementioned technique, the use of a calibration cube is implicit in order to gather the six input points needed.
+Nevertheless, there are more flexible techniques, such as \cite{Zhang2000} approach to calibrate cameras using at least two images of a calibration plane taken at different camera orientations.
 
 Once we have solved the aforementioned equation with SVD, we need to decompose $P$ into $K[R|t]$.
-Since $K$ is an upper triangular matrix, we can use an a $RQ$ decomposition on $P$, where $R$ is upper triangular and $Q$ is orthogonal, \cite{Francis1961}.
+Since $K$ is an upper triangular matrix, we can use an an $RQ$ decomposition on $P$, where $R$ is upper triangular and $Q$ is orthogonal, \cite{Francis1961}.
 For the decomposition only the first three columns in $P$ will be used, and $\mathbf{t} = K^{-1}P_4$, where $P_4$ is the last column in $P$.
 
 % Figure with calibration object???
@@ -391,11 +392,11 @@ For the decomposition only the first three columns in $P$ will be used, and $\ma
 \end{figure}
 
 Epipolar lines and the \textbf{fundamental matrix} $F$ are useful tools in stereo reconstruction.
-In Figure~\ref{fig:epipolarLines} the geometrical relation of the projection a 3D world point $\mathbf{X}$ in two cameras is shown.
-We define $\mathbf{e}$ and $\mathbf{e}^T$ as the epipolar points (epipoles), $F$ is a matrix that satisfies $\mathbf{u}'^TF\mathbf{u} = 0$, where $\mathbf{u} = \begin{bmatrix} u & \vv & 1 \end{bmatrix}$ and $\mathbf{u}' = \begin{bmatrix} u' & \vv' & 1 \end{bmatrix}$ are matching points in the left and right images respectively, and $\mathbf{l}^T$ is a line such that $\mathbf{l}^T = F\mathbf{x}$.
+In Figure~\ref{fig:epipolarLines}, the geometrical relationship of the projection of a 3D world point $\mathbf{X}$ in two camera images is shown.
+We define $\mathbf{e}$ and $\mathbf{e}'$ as the epipolar points (epipoles), $F$ is a matrix that satisfies $\mathbf{u}'^TF\mathbf{u} = 0$, where $\mathbf{u} = \begin{bmatrix} u & \vv & 1 \end{bmatrix}$ and $\mathbf{u}' = \begin{bmatrix} u' & \vv' & 1 \end{bmatrix}$ are matching points in the left and right images respectively, and $\mathbf{l}'$ is a line such that $\mathbf{l}' = F\mathbf{u}'$.
 
-To calculate $F$ an approach in Equations~\ref{eq:originalH} and~\ref{eq:derivatingH} can be used again.
-However, in the equation $A\mathbf{f} = 0$, this time $A$ will have following configuration:
+To calculate $F$ the approach in Equations~\ref{eq:originalH} and~\ref{eq:derivatingH} can be used again.
+However, in the equation $A\mathbf{f} = 0$, $A$ will have following configuration:
 
 \begin{equation}
 \begin{bmatrix}
@@ -411,10 +412,10 @@ F_3^T \\
 = \mathbf{0}^T,
 \end{equation}
 
-where the $\mathbf{f}$ is $F$ reshaped in a column vector and the $l$ and $r$ indices represent points from the left and right images respectively; $F$ can be estimated using SVD.
+where the $\mathbf{f}$ is $F$ reshaped in a column vector; $F$ can be estimated using SVD.
 
-Since we have calculated all the necessary parameters for each camera and their relationship, we can now proceed to stereo reconstruction.
-Below a possible implementation in pseudocode in presented:
+Since we have calculated all the necessary parameters for each camera and their relationship, we can now proceed with stereo reconstruction.
+An implementation in pseudocode is presented below:
 
 \begin{algorithm}[H]
  \caption{Stereo Reconstruction}
@@ -436,7 +437,7 @@ For this task we have a set of correspondences:
 \end{equation}
 
 where the unknown is the 3D world object position $\mathbf{x}_i$.
-Solving for a single point $\mathbf{x}$, we cluster the rows of $P$, such as $P_i = \begin{bmatrix} p_{i1} & p_{i2} & p_{i3} & p_{i4}  \end{bmatrix}$ for $i = \lbrace 1, 2, 3 \rbrace$,
+Solving for a single point $\mathbf{x}$, we cluster the rows of $P$, such that $P_i = \begin{bmatrix} p_{i1} & p_{i2} & p_{i3} & p_{i4}  \end{bmatrix}$ for $i = \lbrace 1, 2, 3 \rbrace$,
 
 \begin{equation}
  u = P_1\mathbf{x}, \quad \vv = P_2\mathbf{x}, \quad 1 = P_3\mathbf{x},\\
@@ -451,7 +452,7 @@ multiplying the first and second equation by the third,
 \end{aligned}
 \end{equation}
 
-doing the equivalent for the right camera equation and stacking the equations in a matrix,
+doing the equivalent for the right camera equation, and stacking them in a matrix,
 
 \begin{equation}
 	\begin{bmatrix}
@@ -465,22 +466,22 @@ doing the equivalent for the right camera equation and stacking the equations in
 	= \mathbf{0}^T \: \rightarrow  \: A\mathbf{x}^T = \mathbf{0}^T.
 \end{equation}
 
-We can calculate $\mathbf{x}$ via singular value decomposition; for each point $\mathbf{x}_i$ a new $A_i$ matrix will be compute and the system will be solved.
-Our implementation extracts the matches using SURF keypoints, however this produces a sparse reconstruction as only a small subset of points in the image is matched.
-In Figure~\ref{fig:stereoReconstruction} the reconstruction results are shown.
-The scene (modelled using Blender) contains some books on a self with a textured plane on the background, based on \cite{Archemi2014}.
+We can calculate $\mathbf{x}$ via singular value decomposition; for each point $\mathbf{x}_i$ a new $A_i$ matrix will be computed and the system will be solved.
+Our implementation extracts the matches using SURF keypoints, however this produces a sparse reconstruction, as only a small subset of points in the image is matched.
+In Figure~\ref{fig:stereoReconstruction}, the work flow of the reconstruction algorithm is shown with an synthetic example.
+The scene (modelled using Blender) contains some books on a shelf, with a textured plane on the background, based on \cite{Archemi2014}.
 The cameras position can be seen on the upper sections of Figures~\ref{fig:blender1} and~\ref{fig:blender2}.
-The matching algorithm produces 87 points in this example, however only 75 are rendered due to some erroneous matches being discarded.
-Some details can be seen in Figure~\ref{fig:stereoRecons2}, the two blue circles depict both cameras position; the cloud has three distinctive clusters, the left one shows the points one the background, the centre-top one represents the points on the cover of the books, and the line-shaped cluster below the books, displays the points tracked on the background under the shelf.
+The matching algorithm produces 87 points for this scene, however only 75 are rendered due to some erroneous matches being discarded.
+Rough forms can be seen in Figure~\ref{fig:stereoRecons2}, the two blue circles depict both cameras position; the cloud has three distinctive clusters, the left one shows the points on the background, the centre-top one represents the points on the side-covers of the books, and the lower line-shaped cluster displays the points tracked on the background under the shelf.
 
 \begin{figure}[htbp]
         \centering
-        \begin{subfigure}[b]{0.45\textwidth}
+        \begin{subfigure}[b]{0.35\textwidth}
                 \includegraphics[width=\textwidth]{images/blender3}
                 \caption{Right view of our 3D scene.}
                 \label{fig:blender1}
         \end{subfigure}
-        \begin{subfigure}[b]{0.45\textwidth}
+        \begin{subfigure}[b]{0.35\textwidth}
                 \includegraphics[width=\textwidth]{images/blender6}
                 \caption{Left view of our 3D scene.}
                 \label{fig:blender2}
@@ -490,12 +491,12 @@ Some details can be seen in Figure~\ref{fig:stereoRecons2}, the two blue circles
 \begin{figure}[htbp]
 		\ContinuedFloat
 		\centering
-        \begin{subfigure}[b]{0.45\textwidth}
+        \begin{subfigure}[b]{0.49\textwidth}
                 \includegraphics[width=\textwidth]{images/reconstructionMatching}
                 \caption{Keypoints matching from each camera view.}
                 \label{fig:stereoMatching}
         \end{subfigure}
-        \begin{subfigure}[b]{0.45\textwidth}
+        \begin{subfigure}[b]{0.49\textwidth}
                 \includegraphics[width=\textwidth]{images/reconstruction1}
                 \caption{Right view of the reconstructed points.}
                 \label{fig:stereoRecons1}
@@ -505,12 +506,12 @@ Some details can be seen in Figure~\ref{fig:stereoRecons2}, the two blue circles
 \begin{figure}[htbp]
 		\ContinuedFloat
 		\centering        
-        \begin{subfigure}[b]{0.45\textwidth}
+        \begin{subfigure}[b]{0.49\textwidth}
                 \includegraphics[width=\textwidth]{images/reconstruction3}
                 \caption{Left view of the reconstructed points.}
                 \label{fig:stereoRecons2}
         \end{subfigure}
-        \begin{subfigure}[b]{0.45\textwidth}
+        \begin{subfigure}[b]{0.49\textwidth}
                 \includegraphics[width=\textwidth]{images/reconstruction2}
                 \caption{Central view of the reconstructed points.}
                 \label{fig:stereoRecons3}
@@ -521,10 +522,9 @@ Some details can be seen in Figure~\ref{fig:stereoRecons2}, the two blue circles
 \FloatBarrier
 \section{Conclusion and future work}
 
-We have presented the mathematical derivations and algorithm implementations for convolution, keypoint feature detection, image matching, camera calibration and 3D stereo reconstruction.
-The next steps would be centred on improving the stereo reconstruction.
-In order to achieve a denser reconstruction more points have to be matched, a simple approach to this is to calculate epipolar lines of matching points and then do a neighbour pixel search along that line.
-Furthermore, to overcome distortions in the cameras and inherent errors in the numeric methods that are use to calibrate them, the epipolar lines can be forced to be horizontal; and recalibration can be done based on matching information.
+We have presented mathematical derivations and algorithm implementations for convolution, keypoint feature detection, image matching, camera calibration and 3D stereo reconstruction.
+The next steps would be centred on improving the stereo reconstruction, in order to achieve a denser reconstruction, more points have to be matched, a simple approach to achieve it, is to calculate epipolar lines of matching points, and then performing a neighbour pixel search along the line.
+Furthermore, to overcome lens distortions in the cameras, and inherent numeric errors in the calibration methods, the epipolar lines can be forced to be horizontal, and recalibration can be done based on matching information.
 
 \bibliographystyle{apalike}
 \bibliography{vuBib}
