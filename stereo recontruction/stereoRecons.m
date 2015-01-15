@@ -44,7 +44,9 @@ end
 % Reconstruct the points
 Xraw = Reconstruct(rightP, leftP, x_right, x_left);
 
-% Reject points that are out of a distance threshold from the origin 
+% Reject points that are out of a distance threshold from the origin
+% this test gets rid of some erroneous matches that reconstruct points
+% too far apart from the main cloud.
 maxDist = 10;
 j = 1;
 for i=1:numMatch

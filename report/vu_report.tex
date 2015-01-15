@@ -149,13 +149,13 @@ The new keypoint location $\mathbf{\hat{x}}$ will be:
 where $\mathbf{x}$ is the previous location and $D(\mathbf{x})$ is approximated with a Taylor expansion in the form of:
 
 \begin{equation}
-D(\mathbf{x}) = D + \frac{ \partial D'}{\partial \mathbf{x}} \mathbf{x} + 0.5 \mathbf{x}' \frac{\partial^2 D}{\partial \mathbf{x^2}}\mathbf{x}.
+D(\mathbf{x}) = D + \frac{ \partial D^T}{\partial \mathbf{x}} \mathbf{x} + 0.5 \mathbf{x}^T \frac{\partial^2 D}{\partial \mathbf{x^2}}\mathbf{x}.
 \end{equation}
 
-Keypoints are rejected if they are weak or in an edge, any extrema is defined as weak if $D(\mathbf{x'}) < 0.03$, where $D(\mathbf{\hat{x}})$ is:
+Keypoints are rejected if they are weak or in an edge, any extrema is defined as weak if $D(\mathbf{x}^T) < 0.03$, where $D(\mathbf{\hat{x}})$ is:
 
 \begin{equation}
-D(\mathbf{\hat{x}}) = D + 0.5 \frac{\partial D'}{\partial \mathbf{x}}\mathbf{\hat{x}}.
+D(\mathbf{\hat{x}}) = D + 0.5 \frac{\partial D^T}{\partial \mathbf{x}}\mathbf{\hat{x}}.
 \end{equation}
 
 Edge elimination is performed when $R(\mathbf{H}) > f(r)$, where $\mathbf{H}$ is a $2 \times 2$ Hessian matrix, $r = 10$, $R(\mathbf{H})$ is defined as:
@@ -254,28 +254,28 @@ w
  h_{31} & h_{32} & h_{33}
 \end{bmatrix}
 \begin{bmatrix}
-x \\
-y \\
-z
+u' \\
+\vv' \\
+w'
 \end{bmatrix},
 \label{eq:originalH}
 \end{equation}
 
-where $u$, $\vv$ and $w$ are the scaled pixel coordinates in $I_1$ and $x$, $y$ and $z$ the scaled pixel coordinates in $I_0$.
-Collecting $H$ in rows, $H_i = \begin{bmatrix} h_{i1} & h_{i2} & h_{i3} \end{bmatrix}$ for $i = \lbrace 1,2,3 \rbrace$ and $\mathbf{x} = \begin{bmatrix} x & y & z \end{bmatrix}$ we can rewrite Equation~\ref{eq:originalH} into:
+where $u$, $\vv$ and $w$ are the scaled pixel coordinates in $I_1$ and $u'$, $\vv'$ and $w'$ the scaled pixel coordinates in $I_0$.
+Collecting $H$ in rows, $H_i = \begin{bmatrix} h_{i1} & h_{i2} & h_{i3} \end{bmatrix}$ for $i = \lbrace 1,2,3 \rbrace$ and $\mathbf{u'} = \begin{bmatrix} u' & \vv' & w' \end{bmatrix}$ we can rewrite Equation~\ref{eq:originalH} into:
 
 \begin{equation}
 \begin{aligned}
-	u = H_1 \mathbf{x}, \: \vv &= H_2 \mathbf{x}, \: w = H_3 \mathbf{x}, \\ 
+	u = H_1 \mathbf{u'}, \: \vv &= H_2 \mathbf{u'}, \: w = H_3 \mathbf{u'}, \\ 
 	\text{enforcing} \: w &= 1, \\
-	u^* = \frac{H_1 \mathbf{x}}{ H_3 \mathbf{x}}, \: \vv^* &= \frac{H_2 \mathbf{x}}{ H_3 \mathbf{x}}, \: \text{hence} \\	
+	u^* = \frac{H_1 \mathbf{u'}}{ H_3 \mathbf{u'}}, \: \vv^* &= \frac{H_2 \mathbf{u'}}{ H_3 \mathbf{u'}}, \: \text{hence} \\	
 	%
-	u^*H_3\mathbf{x} - H_1\mathbf{x} &= 0, \\
-	\vv^* H_3\mathbf{x} - H_2\mathbf{x} &= 0, thus\\
+	u^*H_3\mathbf{u'} - H_1\mathbf{u'} &= 0, \\
+	\vv^* H_3\mathbf{u'} - H_2\mathbf{u'} &= 0, \: thus\\
 	%
 	\begin{bmatrix}
-	-\mathbf{x} & \mathbf{0} & u^*\mathbf{x} \\
-	\mathbf{0} & -\mathbf{x} & \vv^*\mathbf{x}
+	-\mathbf{u'} & \mathbf{0} & u^*\mathbf{u'} \\
+	\mathbf{0} & -\mathbf{u'} & \vv^*\mathbf{u'}
 	\end{bmatrix}
 	%
 	\begin{bmatrix}
@@ -293,7 +293,7 @@ As shown above, each match provides two equations to solve $H$.
 Since, we enforce the scale to be a homogeneous coordinate, $h_{33} = 1$ is no longer an unknown.
 For eight unknowns, eight equations are needed, so four points in each image are to be matched.
 In matrix notation, we will stack all the equations in a matrix $A$, such that $A\mathbf{h}=0$, where $\mathbf{h}$ is $H$ reshaped into a column vector.
-Singular value decomposition of $A$ can be computed to solve the system, $A = UZV'$, where $U$ and $V$ are unitary, $Z$ is rectangular diagonal and $\mathbf{h} = V_{i9}$ for $i = \lbrace 1,2, \ldots, 9 \rbrace$.
+Singular value decomposition of $A$ can be computed to solve the system, $A = UZV^T$, where $U$ and $V$ are unitary, $Z$ is rectangular diagonal and $\mathbf{h} = V_{i9}$ for $i = \lbrace 1,2, \ldots, 9 \rbrace$.
 
 The metric to define if a $newH$ is better than a previously calculated $H$ is double; each match keypoint in $I_0$ is transformed with $newH$, the euclidean distance from the matched point in $I_1$ is calculated, and if it is below a threshold $t$, we count it as a good match.
 $newH$ is considered an improvement over $H$, if it produces more good matches than $H$ or the same number although with lower error.
@@ -320,15 +320,15 @@ Some results obtained with our code are shown in Figure~\ref{fig:ransacSample}.
 3D stereo reconstruction from a par of cameras involves three steps:
 \begin{enumerate}
 \item \textbf{Camera calibration:} compute camera model parameters.
-\item \textbf{Fundamental matrix:} estimate an $F$ matrix such that $\mathbf{u_1}'F\mathbf{u_2} = 0$, where $\mathbf{u_1}$ and $\mathbf{u_2}$ are corresponding points in two images.
+\item \textbf{Fundamental matrix:} estimate an $F$ matrix such that $\mathbf{u}'^TF\mathbf{u} = 0$, where $\mathbf{u}$ and $\mathbf{u}'$ are corresponding points in two images.
 \item \textbf{Reconstruct 3D points:} once constrained by $F$, triangulate points position from the two images.
 \end{enumerate}
 
 We will model our cameras using the pinhole camera model, in this framework a world 3D point $\mathbf{x} = \begin{bmatrix} x & y & z & 1 \end{bmatrix}$ is projected into a 2D image point $\mathbf{u} = \begin{bmatrix} u & \vv & 1 \end{bmatrix}$ using the following equations:
 
 \begin{gather}
-	\mathbf{u}' = P \mathbf{x}', \label{eq:matrixP} \\
-	\mathbf{u}' = K [R | \mathbf{t}] \mathbf{x}', \label{eq:matrixRT}
+	\mathbf{u}^T = P \mathbf{x}^T, \label{eq:matrixP} \\
+	\mathbf{u}^T = K [R | \mathbf{t}] \mathbf{x}^T, \label{eq:matrixRT}
 \end{gather}
 
 where $K$ is 
@@ -365,19 +365,23 @@ For the decomposition only the first three columns in $P$ will be used, and $\ma
 
 Epipolar lines and the \textbf{fundamental matrix} $F$ are useful tools in stereo reconstruction.
 In Figure~\ref{fig:epipolarLines} the geometrical relation of the projection a 3D world point $\mathbf{X}$ in two cameras is shown.
-We define $\mathbf{e}$ and $\mathbf{e}'$ as the epipolar points (epipoles), $F$ is a matrix that satisfies $\mathbf{u_1}'F\mathbf{u_2} = 0$, where $\mathbf{u_1} = \begin{bmatrix} u_1 & \vv_1 & 1 \end{bmatrix}$ and $\mathbf{u_2} = \begin{bmatrix} u_2 & \vv_2 & 1 \end{bmatrix}$ are matching points in the left and right images respectively, and $\mathbf{l}'$ is a line such that $\mathbf{l}' = F\mathbf{x}$.
+We define $\mathbf{e}$ and $\mathbf{e}^T$ as the epipolar points (epipoles), $F$ is a matrix that satisfies $\mathbf{u}'^TF\mathbf{u} = 0$, where $\mathbf{u} = \begin{bmatrix} u & \vv & 1 \end{bmatrix}$ and $\mathbf{u}' = \begin{bmatrix} u' & \vv' & 1 \end{bmatrix}$ are matching points in the left and right images respectively, and $\mathbf{l}^T$ is a line such that $\mathbf{l}^T = F\mathbf{x}$.
 
 To calculate $F$ an approach in Equations~\ref{eq:originalH} and~\ref{eq:derivatingH} can be used again.
 However, in the equation $A\mathbf{f} = 0$, this time $A$ will have following configuration:
 
 \begin{equation}
 \begin{bmatrix}
-u_{l1} u_{r1} & 	\vv_{l1} u_{r1} & u_{r1} & u_{l1} \vv_{r1} & \vv_{l1} \vv_{r1} & \vv_{r1} & u_{l1} & \vv_{l1} & 1 \\
+u_1 u_1' & 	\vv_1 u_1' & u_1' & u_1 \vv_1' & \vv_1 \vv_1' & \vv_1' & u_1 & \vv_1 & 1 \\
 \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots  \\
-u_{l8} u_{r8} & \vv_{l8} u_{r8} & u_{r8} & u_{l8} \vv_{r8} & \vv_{l8} \vv_{r8} & \vv_{r8} & u_{l8} & \vv_{l8} & 1 
+u_8 u_8' & \vv_8 u_8' & u_8' & u_8 \vv_8' & \vv_8 \vv_8' & \vv_8' & u_8 & \vv_8 & 1 
 \end{bmatrix}
-\mathbf{f}
-= 0,
+\begin{bmatrix}
+F_1^T \\
+F_2^T \\
+F_3^T \\
+\end{bmatrix}
+= \mathbf{0}^T,
 \end{equation}
 
 where the $\mathbf{f}$ is $F$ reshaped in a column vector and the $l$ and $r$ indices represent points from the left and right images respectively; $F$ can be estimated using SVD.
@@ -401,11 +405,11 @@ Below a possible implementation in pseudocode in presented:
 For this task we have a set of correspondences:
 
 \begin{equation}
- \mathbf{u_{i}} = P\mathbf{x}, \quad \mathbf{u'_{i}} = P'\mathbf{x},
+ \mathbf{u}_{i} = P\mathbf{x}_i, \quad \mathbf{u'}_{i} = P'\mathbf{x}_i,
 \end{equation}
 
-where the unknown is the 3D world object position $\mathbf{x}$.
-Clustering the rows of $P$, such as $P_i = \begin{bmatrix} p_{i1} & p_{i2} & p_{i3} & p_{i4}  \end{bmatrix}$ for $i = \lbrace 1, 2, 3 \rbrace$,
+where the unknown is the 3D world object position $\mathbf{x}_i$.
+Solving for a single point $\mathbf{x}$, we cluster the rows of $P$, such as $P_i = \begin{bmatrix} p_{i1} & p_{i2} & p_{i3} & p_{i4}  \end{bmatrix}$ for $i = \lbrace 1, 2, 3 \rbrace$,
 
 \begin{equation}
  u = P_1\mathbf{x}, \quad \vv = P_2\mathbf{x}, \quad 1 = P_3\mathbf{x},\\
@@ -430,11 +434,11 @@ doing the equivalent for the right camera equation and stacking the result below
 	\vv' P_3' - P_2'	
 	\end{bmatrix}
 	%
-	\mathbf{x}'
-	= \mathbf{0}^T,
+	\mathbf{x}^T
+	= \mathbf{0}^T \: \rightarrow  \: A\mathbf{x}^T = \mathbf{0}^T.
 \end{equation}
 
-which can be solved via singular value decomposition.
+We can calculate $\mathbf{x}$ via singular value decomposition; for each point $\mathbf{x}_i$ a new $A_i$ matrix will be compute and the system will be solved.
 Our implementation extracts the matches using SURF keypoints, however this produces a sparse reconstruction as only a small subset of points in the image is matched.
 In Figure~\ref{fig:stereoReconstruction} the reconstruction results are shown.
 The scene (modelled using Blender) contains some books on a self with a textured plane on the background CITE AUTHOR AND BLENDER.
