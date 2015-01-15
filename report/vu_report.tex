@@ -197,7 +197,7 @@ where $L$ is chosen to have the same sigma as the keypoint.
 For each keypoint a $16 \times 16$ region around is selected, and the orientations for each pixel are calculated.
 $4 \times 4$ histograms are computed with 8 bins each; this 8-dimensional values are placed in an array forming a 128 element feature vector for each keypoint, as shown in Figure~\ref{fig:histoCal}.
 Normalizing the vector to unit length improves invariance to illumination changes.
-In Figure~\ref{fig:featuresSample}, keypoints detected in a sample image by our SIFT implementation and by Matlab's SURF features are shown.
+In Figure~\ref{fig:featuresSample}, keypoints detected in a sample image by our SIFT implementation and by Matlab's SURF features, \cite{Bay2006}, are shown.
 
 \begin{figure}[htbp!]
 	\centering
@@ -243,7 +243,7 @@ A general overview of the algorithm is given below:
 
 \begin{algorithm}[H]
  \caption{RANSAC}
- \KwData{A pair of images $I$ and $I'$, $k$ number of iterations, distance threshold $t$.}
+ \KwData{A pair of images $I$ and $I'$, number of iterations $k$ , distance threshold $t$.}
  \KwResult{Homography matrix $H$.}
  $f$, $f'$ = detectKeypoints($I$, $I'$)\;
  $m$ = matchFeatures($f$, $f'$)\;
@@ -251,14 +251,14 @@ A general overview of the algorithm is given below:
  \For{$i\leftarrow 0$ \KwTo $k$ }{
   $rp$ = pickRandomPoints($m$)\;
   $newH$ = computeHomography($rp$)\;
-  \If{$newH$ is better than $H$}{
+  \If{isBetter($newH$, $H$, $t$)}{
    $H = newH$\;
    }
  }
 \end{algorithm}
 
-To detect and match the keypoints, our implementation uses SURF features, \cite{Bay2006}.
-We want to calculate the matrix $H$ that transforms from one image to the other, such that:
+To detect and match the keypoints, our implementation uses SURF features.
+The goal in this stage is to calculate the matrix $H$ that transforms from one image to the other, such that:
 
 \begin{equation}
 \begin{bmatrix}
@@ -280,7 +280,7 @@ w'
 \label{eq:originalH}
 \end{equation}
 
-where $u$, $\vv$ and $w$ are the scaled pixel coordinates in $I'$ and $u'$, $\vv'$ and $w'$ the scaled pixel coordinates in $I$.
+where $u$, $\vv$ and $w$ are the scaled pixel coordinates in $I$ and $u'$, $\vv'$ and $w'$ the scaled pixel coordinates in $I'$.
 Collecting $H$ in rows, $H_i = \begin{bmatrix} h_{i1} & h_{i2} & h_{i3} \end{bmatrix}$ for $i = \lbrace 1,2,3 \rbrace$ and $\mathbf{u'} = \begin{bmatrix} u' & \vv' & w' \end{bmatrix}$ we can rewrite Equation~\ref{eq:originalH} into:
 
 \begin{equation}
@@ -309,23 +309,28 @@ Collecting $H$ in rows, $H_i = \begin{bmatrix} h_{i1} & h_{i2} & h_{i3} \end{bma
 
 where $\mathbf{0} = \begin{bmatrix} 0 & 0 & 0 \end{bmatrix}$. 
 As shown above, each match provides two equations to solve $H$.
-Since, we enforce the scale to be a homogeneous coordinate, $h_{33} = 1$ is no longer an unknown.
+Since we enforce the scale to be homogeneous, $h_{33} = 1$ is no longer an unknown.
 For eight unknowns, eight equations are needed, so four points in each image are to be matched.
 In matrix notation, we will stack all the equations in a matrix $A$, such that $A\mathbf{h}=0$, where $\mathbf{h}$ is $H$ reshaped into a column vector.
 Singular value decomposition of $A$ can be computed to solve the system, $A = UZV^T$, where $U$ and $V$ are unitary, $Z$ is rectangular diagonal and $\mathbf{h} = V_{i9}$ for $i = \lbrace 1,2, \ldots, 9 \rbrace$.
 
-The metric to define if a $newH$ is better than a previously calculated $H$ is double; each match keypoint in $I$ is transformed with $newH$, the euclidean distance from the matched point in $I'$ is calculated, and if it is below a threshold $t$, we count it as a good match.
-$newH$ is considered an improvement over $H$, if it produces more good matches than $H$ or the same number although with lower error.
+The metric to define if a $newH$ is better than a certain $H$ is double; each matched keypoint in $I$ is transformed with $newH$, the euclidean distance $d_i$ between the transformed keypoint and its match in $I'$ is calculated, and if it is below a threshold $t$, we count it as a good match.
+$newH$ is considered an improvement over $H$ if it generates more good matches, or the same number although with lower overall $D$, such that $D = \sum d_i $.
 Some results obtained with our code are shown in Figure~\ref{fig:ransacSample}.
 
 \begin{figure}[htbp!]
         \centering
-        \begin{subfigure}[b]{0.6\textwidth}
+        \begin{subfigure}[b]{0.8\textwidth}
                 \includegraphics[width=\textwidth]{images/ransac2}
                 \caption{A synthetic test.}
                 \label{fig:ransac1}
         \end{subfigure}    
-        \begin{subfigure}[b]{0.6\textwidth}
+\end{figure}
+
+\begin{figure}[htbp]
+		\ContinuedFloat
+		\centering        
+        \begin{subfigure}[b]{0.8\textwidth}
                 \includegraphics[width=\textwidth]{images/ransac1}
                 \caption{Matching a box, images taken from \cite{Lowe2004}.}
                 \label{fig:ransac2}
@@ -495,6 +500,11 @@ Some details can be seen in Figure~\ref{fig:stereoRecons2}, the two blue circles
                 \caption{Right view of the reconstructed points.}
                 \label{fig:stereoRecons1}
         \end{subfigure}
+\end{figure}
+
+\begin{figure}[htbp]
+		\ContinuedFloat
+		\centering        
         \begin{subfigure}[b]{0.45\textwidth}
                 \includegraphics[width=\textwidth]{images/reconstruction3}
                 \caption{Left view of the reconstructed points.}
