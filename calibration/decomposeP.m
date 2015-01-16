@@ -1,19 +1,11 @@
 function [K,R,t] = decomposeP(P)
-% Decompose_P - decompose camera projection matrix P into intrinsic
-% matrix K, rotation matrix R, and translation vector t
-%
-% Input:
-%           P - 3x4 camera projection matrix
-%
-% Output:
-%           K - 3x3 intrinsic matrix
-%           R - 3x3 rotation matrix
-%           t - 3x1 translation vector
+% Uses RQ to decompose P into K, [R|t]
 
+% Matlab does not implement RQ, so do QR and inverse the result
 Q = inv(P(1:3, 1:3));
 [R,K] = qr(Q);
 
-%% Check signs of elements of K
+%% Make sure focal lenghts are positive
 if (K(1,1) < 0)
     S = [-1 0 0;0 1 0;0 0 1];
     R = R*S;
@@ -26,6 +18,7 @@ if (K(2,2) < 0)
     K = S*K;
 end
 
+% Homogeneous coordinate positive too
 if (K(3,3) < 0)
     S = [1 0 0;0 1 0;0 0 -1];
     R = R*S;
@@ -41,9 +34,8 @@ if det(R) < 0
     R = -R;
 end
 
-%% Rotation matrix
+%% Inverse since we are using QR
 R = inv(R);
 
-%% Intrinsic matrix
 K = inv(K);
 K = K./K(3,3);
