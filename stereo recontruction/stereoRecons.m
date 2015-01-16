@@ -6,7 +6,7 @@ load('leftCam.mat');
 load('rightCam.mat');
 
 % True to use points on the groundtruth calibration cube
-simpleRecons = true;
+simpleRecons = false;
 
 if simpleRecons
     img1 = imreadgrey('images/cube_left.png');
