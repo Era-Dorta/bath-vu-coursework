@@ -1,8 +1,11 @@
-function [ best_model ] = myFRANSAC( points1, points2, n, k, t, verbose )
+function [ best_model ] = myFRANSAC( points1, points2, k, t, verbose )
+% Assumes that points1(i) and points2(i) are matches 
+tic;
+
+n = 8; % Eight matches are needed
 
 %% Detect surf features on both images
 rng('default'); % Set random seed to default
-tic;
 
 numMatch = size(points1, 1);
 

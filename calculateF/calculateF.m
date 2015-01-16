@@ -36,11 +36,15 @@ image1_points(:,3) = 1; % Add homogeneous coordinate
 image2_points = x_right';% Pixel locations in the second img
 image2_points(:,3) = 1;
 
-%F1 = F_Norm8(x_left, x_right);
-
-n = 8; %- the number of random points to pick every iteration in order to create the transform.
 k = 5000; % - the number of iterations to run
 t = 5; % - the threshold for the square distance for a point to be considered as a match
 verbose = true; % true to display extra information
 
-F = myFRANSAC(image1_points, image2_points, n, k, t, verbose);
+F = myFRANSAC(image1_points, image2_points, k, t, verbose);
+
+% Check x'Fx = 0 for all the points
+t = sqrt(t);
+for i = 1:18
+    error = image2_points(i,:) * F *  image1_points(i,:)';
+    assert(error < t, 'Point %d failed x''Fx with error %2.2f\n', i, error);
+end
