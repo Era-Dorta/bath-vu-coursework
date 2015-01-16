@@ -147,20 +147,21 @@ Note that to provide an efficient implementation, the convolution and difference
 An example on how this DOG structure looks like is shown in Figure~\ref{fig:difOfGauSample}, where sigma increases from left to right and from top to bottom.
 The keypoints selected will be those who are a maximum or a minimum in a $3 \times 3 \times 3$ cube region, so in their scale and the ones above and below.
 Selecting locations using this scheme allows to find keypoints regardless of their scale, as we progress towards the top of the pyramid,  the local maximum or minima will be produced by bigger objects in $I$.
-In our implementation only one octave of the pyramid is calculated.
+In our implementation only one octave of the pyramid is calculated, as shown in Figure~\ref{fig:DoGExtrema}.
 
 \begin{figure}[htbp!]
 	\centering
 	\begin{subfigure}[a]{0.59\textwidth}
 		\includegraphics[width=\textwidth]{images/DoGWithExtrema}
-		\caption{DoG space with simple extrema points detection.}
-		\label{fig:histoCal}
+		\caption{}
+		\label{fig:DoGExtrema}
 	\end{subfigure}
 	\begin{subfigure}[a]{0.39\textwidth}
 		\includegraphics[width=\textwidth]{images/siftHistograms}
-		\caption{SIFT histogram computation \cite{Gu2013}.}
+		\caption{}
 		\label{fig:histoCal}
 	\end{subfigure}
+	\caption{DoG space with simple extrema points detection in (a), and SIFT histogram computation in (b), \cite{Gu2013}.}
 \end{figure}
 
 Keypoint refinement is done with an optimization step which removes weak points and also improves their position.
