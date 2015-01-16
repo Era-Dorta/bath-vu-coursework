@@ -42,7 +42,7 @@ else
 end
 
 % Reconstruct the points
-Xraw = Reconstruct(rightP, leftP, x_right, x_left);
+Xraw = reconstruct(rightP, leftP, x_right, x_left);
 
 % Reject points that are out of a distance threshold from the origin
 % this test gets rid of some erroneous matches that reconstruct points

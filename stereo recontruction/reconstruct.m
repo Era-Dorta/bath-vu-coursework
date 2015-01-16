@@ -1,4 +1,4 @@
-function [X] = Reconstruct(P1, P2, x1, x2)
+function [X] = reconstruct(P1, P2, x1, x2)
 % Reconstruct - computes 3D points given two projection matrices
 % and corresponding image points
 %
