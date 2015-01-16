@@ -149,6 +149,20 @@ The keypoints selected will be those who are a maximum or a minimum in a $3 \tim
 Selecting locations using this scheme allows to find keypoints regardless of their scale, as we progress towards the top of the pyramid,  the local maximum or minima will be produced by bigger objects in $I$.
 In our implementation only one octave of the pyramid is calculated.
 
+\begin{figure}[htbp!]
+	\centering
+	\begin{subfigure}[a]{0.59\textwidth}
+		\includegraphics[width=\textwidth]{images/DoGWithExtrema}
+		\caption{DoG space with simple extrema points detection.}
+		\label{fig:histoCal}
+	\end{subfigure}
+	\begin{subfigure}[a]{0.39\textwidth}
+		\includegraphics[width=\textwidth]{images/siftHistograms}
+		\caption{SIFT histogram computation \cite{Gu2013}.}
+		\label{fig:histoCal}
+	\end{subfigure}
+\end{figure}
+
 Keypoint refinement is done with an optimization step which removes weak points and also improves their position.
 The new keypoint location $\mathbf{\hat{x}}$ will be:
 
@@ -198,13 +212,6 @@ For each keypoint a $16 \times 16$ region around is selected, and the orientatio
 $4 \times 4$ histograms are computed with 8 bins each; this 8-dimensional values are placed in an array forming a 128 element feature vector for each keypoint, as shown in Figure~\ref{fig:histoCal}.
 Normalizing the vector to unit length improves invariance to illumination changes.
 In Figure~\ref{fig:featuresSample}, keypoints detected in a sample image by our SIFT implementation and by Matlab's SURF features, \cite{Bay2006}, are shown.
-
-\begin{figure}[htbp!]
-	\centering
-	\includegraphics[scale=0.43]{images/siftHistograms}
-	\caption{SIFT histogram computation \cite{Gu2013}.}
-	\label{fig:histoCal}
-\end{figure}
 
 \begin{figure}[htbp!]
         \centering
