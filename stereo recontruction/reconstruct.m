@@ -11,36 +11,20 @@ function [X] = reconstruct(P1, P2, x1, x2)
 % Output:
 %           X - 4xn point in space
 
-[r1,c1] = size(x1);
-[r2,c2] = size(x2);
-n = c1; % number of points
+n = size(x1, 2); % number of points
 
-if (r1 == 3) % normalise
-    x1(1,:) = x1(1,:)./x1(3,:);
-    x1(2,:) = x1(2,:)./x1(3,:);
-end
+X = zeros(4,n);
 
-if (r2 == 3) % normalise
-    x2(1,:) = x2(1,:)./x2(3,:);
-    x2(2,:) = x2(2,:)./x2(3,:);
-end
-
-X = NaN(4,n);
-
-if (c1 == c2)
-    for i = 1:n
-        A = [x1(1,i) * P1(3,:) - P1(1,:);
-            x1(2,i) * P1(3,:) - P1(2,:);
-            x2(1,i) * P2(3,:) - P2(1,:);
-            x2(2,i) * P2(3,:) - P2(2,:);
-            ];
-        [~,~,V] = svd(A);
-        
-        X(1,i) = V(1,end)/V(end,end);
-        X(2,i) = V(2,end)/V(end,end);
-        X(3,i) = V(3,end)/V(end,end);
-        X(4,i) = V(4,end)/V(end,end);
-    end
+for i = 1:n
+    A = [x1(1,i) * P1(3,:) - P1(1,:);
+        x1(2,i) * P1(3,:) - P1(2,:);
+        x2(1,i) * P2(3,:) - P2(1,:);
+        x2(2,i) * P2(3,:) - P2(2,:);
+        ];
+    
+    [~,~,V] = svd(A);
+    
+    X(:, i) = V(:,end)/V(end,end);
 end
 
 end

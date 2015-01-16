@@ -1,31 +1,35 @@
 close all;
 clear all;
 
+% Load right and left camera calibration matrices
 load('leftCam.mat');
 load('rightCam.mat');
 
-simpleRecons = false;
+% True to use points on the groundtruth calibration cube
+simpleRecons = true;
 
 if simpleRecons
     img1 = imreadgrey('images/cube_left.png');
     img2 = imreadgrey('images/cube_right.png');
+    
+    % Matched pixel positions
+    x_left = [322.5, 102.5; 374, 97; 425, 90.5; 341.5, 122; 399, 114.5; ...
+        451, 108; 367, 144.5; 425, 136; 484.5, 127.5; ...
+        391.5, 232.5; 451.5, 221.5; 509, 211; 387.5, 289.5; 445.5, 277.5; ...
+        500.5, 265.5; 384.5, 341.5; 440, 329; 493, 316]';
     
     x_right = [217.5, 90.5; 268, 96.5; 321, 102.5; 190.5, 107.5; 243.5, 114.5; ...
         299.5, 121.5; 159, 127.5; 215.5, 135.5; 275, 144; ...
         132, 211; 189.5, 221.5; 250.5, 232.5; 140, 266.5; 195.5, 277.5; ...
         253.5, 289.5; 148.5, 316.5; 201, 329; 256.5, 341.5]';
     
-    x_left = [322.5, 102.5; 374, 97; 425, 90.5; 341.5, 122; 399, 114.5; ...
-        451, 108; 367, 144.5; 425, 136; 484.5, 127.5; ...
-        391.5, 232.5; 451.5, 221.5; 509, 211; 387.5, 289.5; 445.5, 277.5; ...
-        500.5, 265.5; 384.5, 341.5; 440, 329; 493, 316]';
-    
     numMatch = size(x_right, 2);
 else
     img1 = imreadgrey('images/booksLeft2.png');
     img2 = imreadgrey('images/booksRight2.png');
-
-    % Detect SURF points and lower the threshold to get extra matches later
+    
+    % Detect SURF points, it uses a lower strength threshold to include
+    % weaker keypoints
     points1 = detectSURFFeatures(img1, 'MetricThreshold', 100);
     [features1, validPoints1] = extractFeatures(img1, points1);
     
@@ -44,7 +48,7 @@ else
 end
 
 % Reconstruct the points
-Xraw = reconstruct(rightP, leftP, x_right, x_left);
+Xraw = reconstruct(leftP, rightP, x_left, x_right);
 
 % Reject points that are out of a distance threshold from the origin
 % this test gets rid of some erroneous matches that reconstruct points
@@ -59,9 +63,9 @@ for i=1:numMatch
 end
 
 
-% Plot the reconstructed points and the cameras position
+% Plot the reconstructed points and the camera positions
 figure; hold on;
 plot3(X(1,:), X(2,:), X(3,:), 'r*');
-plot3(-5, -8, 10, 'bd');
-plot3(5, -8, 10, 'bd');
+plot3(leftc(1), leftc(2), leftc(3), 'bd');
+plot3(rightc(1), rightc(2), rightc(3), 'bd');
 hold off;
