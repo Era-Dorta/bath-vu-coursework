@@ -19,6 +19,8 @@ if simpleRecons
         451, 108; 367, 144.5; 425, 136; 484.5, 127.5; ...
         391.5, 232.5; 451.5, 221.5; 509, 211; 387.5, 289.5; 445.5, 277.5; ...
         500.5, 265.5; 384.5, 341.5; 440, 329; 493, 316]';
+    
+    numMatch = size(x_right, 2);
 else
     img1 = imreadgrey('images/booksLeft2.png');
     img2 = imreadgrey('images/booksRight2.png');
