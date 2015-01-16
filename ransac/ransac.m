@@ -11,9 +11,6 @@ clear all;
 img1 = imreadgrey('images/booksLeft2.png');
 img2 = imreadgrey('images/booksRight2.png');
 
-%img1 = imreadgrey('images/spaceConsoleLeftCut.png');
-%img2 = imreadgrey('images/spaceConsoleRightCut.png');
-
 k = 1000; % - the number of iterations to run
 t = 5; % - the threshold for the square distance for a point to be considered as a match
 verbose = true; % true to display extra information
